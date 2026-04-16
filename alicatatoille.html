@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Alicatatoille</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E1A2C">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:#1E1A2C;}
+:root{
+  --ink:#1E1A2C;--ink-mid:#3A3448;--ink-soft:#6A6480;--ink-faint:#9898A8;
+  --paper:#F6F4F2;--paper-2:#EEEAF4;--border:#E0DCE8;
+  --berry:#B03060;--berry-pale:#F8E0EC;
+  --amber:#C07820;--amber-pale:#FFF0D8;
+  --slate:#5A6888;--slate-pale:#E8ECF4;
+  --sage:#4A7060;--sage-pale:#DCF0E8;
+}
+
+/* ── app shell ── */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;}
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.screen.active{display:flex;}
+
+/* ── nav ── */
+.tnav{
+  background:var(--ink);padding:13px 20px 11px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.logo{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:#EDE8F4;letter-spacing:.02em;}
+.logo-sub{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:#7868A0;display:block;font-style:normal;margin-top:1px;}
+.tnav-time{font-family:'DM Mono',monospace;font-size:11px;color:#C0B0D8;}
+.tnav-back{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#C0B0D8;display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 0;}
+.date-row{background:var(--ink);padding:5px 20px 7px;font-family:'DM Mono',monospace;font-size:9px;color:#9888B8;letter-spacing:.12em;text-transform:uppercase;}
+
+/* ── conductor banner ── */
+.conductor{
+  background:linear-gradient(135deg,#2A1E3A,#1E1628);
+  border-bottom:1px solid rgba(176,48,96,.25);
+  padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer;
+}
+.cond-dot{width:7px;height:7px;border-radius:50%;background:var(--berry);flex-shrink:0;box-shadow:0 0 7px rgba(176,48,96,.7);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.cond-text{font-family:'DM Sans',sans-serif;font-size:12px;color:#C8B8D8;flex:1;}
+.cond-text strong{color:#EDE8F4;font-weight:500;}
+.cond-pill{font-family:'DM Mono',monospace;font-size:9px;color:var(--berry);background:rgba(176,48,96,.12);border:1px solid rgba(176,48,96,.25);padding:3px 8px;border-radius:4px;}
+.cond-chevron{font-size:12px;color:#C0B0D8;font-weight:500;}
+
+/* ── feast color chips ── */
+.fc-crimson{background:#8B2040;} .fc-indigo{background:#3A2E7A;} .fc-forest{background:#2A5040;}
+.fc-sienna{background:#7A3E18;} .fc-slate-b{background:#384868;} .fc-plum{background:#5C2860;}
+.fc-ochre{background:#7A5E18;} .fc-teal{background:#1E5860;} .fc-burgundy{background:#6A1C30;}
+.fc-umber{background:#5A3A28;}
+
+.feast-chip{border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.9);text-transform:uppercase;flex-shrink:0;position:relative;overflow:hidden;}
+.feast-chip::after{content:'';position:absolute;inset:0;background:linear-gradient(170deg,rgba(255,255,255,.10) 0%,rgba(0,0,0,.25) 100%);}
+.feast-chip .chip-initials{position:relative;z-index:1;}
+.chip-sm{width:44px;height:44px;font-size:14px;border-radius:10px;}
+.chip-xs{width:28px;height:28px;font-size:9px;border-radius:7px;}
+
+/* ── scroll ── */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{width:3px;}
+.scroll::-webkit-scrollbar-track{background:transparent;}
+.scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── inner header ── */
+.inner-header{background:var(--ink);padding:16px 20px 14px;flex-shrink:0;}
+.inner-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#9888B8;margin-bottom:5px;}
+.inner-title{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#EDE8F4;line-height:1.2;}
+.inner-meta{font-family:'DM Mono',monospace;font-size:9px;color:#C0B0D8;margin-top:4px;letter-spacing:.06em;}
+
+/* ── buttons ── */
+.btn-primary{background:var(--ink);color:#EDE8F4;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:10px;text-align:center;cursor:pointer;}
+.btn-secondary{background:transparent;color:var(--ink-soft);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:13px;border-radius:10px;text-align:center;cursor:pointer;border:1.5px solid var(--border);}
+.btn-berry{background:var(--berry);color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:10px;text-align:center;cursor:pointer;}
+.btn-row{display:flex;gap:8px;padding:12px 16px 20px;}
+
+/* ════════════════════════════════
+   HOME SCREEN
+   ════════════════════════════════ */
+.grid-portrait{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;background:var(--ink);overflow-y:auto;flex:1;grid-template-rows:2fr 1.3fr 1fr 0.8fr;align-content:stretch;}
+.gp-large{grid-column:span 2;}
+.gp-small{}
+.gp-medium{grid-column:span 2;}
+.gp-wide{grid-column:span 2;}
+
+.tile{border-radius:14px;overflow:hidden;position:relative;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;transition:opacity .1s;}
+.tile:active{opacity:.85;}
+.tile-content{position:relative;z-index:2;padding:11px 13px;}
+.tile-eyebrow{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.13em;text-transform:uppercase;margin-bottom:3px;}
+.tile-title{font-family:'Playfair Display',serif;line-height:1.2;}
+.tile-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.05em;margin-top:3px;}
+
+/* active feast tile */
+.t-active{display:flex;flex-direction:column;justify-content:flex-end;}
+.t-active-chip{position:absolute;inset:0;border-radius:14px;}
+.t-active-chip::after{content:'';position:absolute;inset:0;border-radius:14px;background:linear-gradient(170deg,rgba(20,14,30,.05) 0%,rgba(20,14,30,.55) 55%,rgba(20,14,30,.9) 100%);}
+.t-active .tile-eyebrow{color:rgba(237,232,244,.55);}
+.t-active .tile-title{color:#EDE8F4;}
+.t-active .tile-sub{color:rgba(208,200,240,.65);}
+.t-active .tile-content{position:relative;z-index:2;}
+.chip-bg-initials{position:absolute;right:-8px;top:-8px;z-index:1;font-family:'DM Mono',monospace;font-weight:500;font-size:88px;letter-spacing:-.02em;color:rgba(255,255,255,.07);text-transform:uppercase;line-height:1;pointer-events:none;}
+
+/* secondary/other tiles */
+.t-active2{display:flex;flex-direction:column;justify-content:flex-end;}
+.t-active2 .tile-eyebrow{color:rgba(237,232,244,.45);font-size:7px;}
+.t-active2 .tile-title{color:#EDE8F4;font-size:15px;}
+.t-active2 .tile-sub{color:rgba(180,168,200,.6);font-size:8px;}
+
+.t-journal,.t-note,.t-settings{background:#1E1A30;position:relative;}
+.t-journal .tile-eyebrow,.t-note .tile-eyebrow,.t-settings .tile-eyebrow{color:rgba(237,232,244,.35);}
+.t-journal .tile-title,.t-note .tile-title,.t-settings .tile-title{color:#EDE8F4;}
+.t-tile-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.t-journal-ov{position:absolute;inset:0;border-radius:14px;background:linear-gradient(170deg,rgba(20,14,30,.2) 0%,rgba(20,14,30,.82) 100%);}
+.t-note-ov{position:absolute;inset:0;border-radius:14px;background:linear-gradient(170deg,rgba(20,14,30,.15) 0%,rgba(20,14,30,.78) 100%);}
+.t-settings-ov{position:absolute;inset:0;border-radius:14px;background:linear-gradient(170deg,rgba(20,14,30,.2) 0%,rgba(20,14,30,.75) 100%);}
+
+.t-wtc{background:#1E1A30;position:relative;}
+.t-wtc .tile-eyebrow{color:rgba(237,232,244,.35);}
+.t-wtc .tile-title{color:#EDE8F4;}
+.t-wtc-ov{position:absolute;inset:0;border-radius:14px;background:linear-gradient(170deg,rgba(20,14,30,.08) 0%,rgba(20,14,30,.82) 100%);}
+
+.t-new{background:linear-gradient(135deg,#2A2240,#1E1628);border:1px dashed rgba(237,232,244,.12);}
+.t-new .tile-content{display:flex;align-items:center;gap:10px;justify-content:center;height:100%;}
+.t-new-plus{width:28px;height:28px;border-radius:7px;background:rgba(237,232,244,.10);border:1px solid rgba(237,232,244,.18);display:flex;align-items:center;justify-content:center;font-size:18px;color:#EDE8F4;line-height:1;font-weight:300;flex-shrink:0;}
+.t-new-label{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:#EDE8F4;opacity:.75;}
+
+.pip-row{display:flex;gap:5px;margin-top:5px;}
+.t-pip{width:5px;height:5px;border-radius:50%;}
+
+/* status badge on tile */
+.tile-status-badge{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.06em;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;}
+.tsb-cooking{background:rgba(192,120,32,.25);color:#D4A050;}
+.tsb-overtime{background:rgba(176,48,96,.2);color:var(--berry);}
+
+/* ════════════════════════════════
+   ACTIVE FEAST SCREEN
+   ════════════════════════════════ */
+.feast-header{background:var(--ink);padding:16px 20px 0;flex-shrink:0;}
+.feast-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#9888B8;margin-bottom:4px;}
+.feast-name{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#EDE8F4;line-height:1.2;}
+.feast-meta{font-family:'DM Mono',monospace;font-size:9px;color:#9888B8;margin-top:4px;padding-bottom:14px;}
+
+/* components list */
+.components-list{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.comp-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;transition:box-shadow .12s;}
+.comp-card:active{box-shadow:0 2px 12px rgba(0,0,0,.1);}
+.comp-card-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.comp-name{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);font-weight:500;}
+.comp-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink-faint);margin-top:3px;}
+.s-badge{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.06em;padding:3px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0;}
+.s-not-started{background:transparent;color:#4A4470;border:1px solid rgba(74,68,112,.25);}
+.s-cooking{background:rgba(192,120,32,.2);color:#D4A050;}
+.s-resting{background:rgba(74,112,96,.2);color:var(--sage);}
+.s-done{background:rgba(100,96,120,.15);color:#6A6480;}
+
+/* add component */
+.add-comp-btn{margin:0 16px 16px;border:1.5px dashed var(--border);border-radius:11px;padding:13px;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-comp-btn span{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-faint);}
+
+/* feast action row */
+.feast-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:var(--paper);}
+.btn-sm{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;border-radius:8px;cursor:pointer;}
+.btn-complete{background:var(--berry);color:#fff;}
+.btn-ghost{background:transparent;color:var(--ink-faint);border:1px solid var(--border);}
+
+/* overtime banner */
+.overtime-banner{background:linear-gradient(135deg,#2A1830,#1A1228);border-top:1px solid rgba(176,48,96,.2);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.ot-img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.ot-text{flex:1;}
+.ot-title{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:#EDE8F4;}
+.ot-sub{font-family:'DM Mono',monospace;font-size:8px;color:rgba(176,48,96,.7);letter-spacing:.07em;margin-top:2px;}
+
+/* ════════════════════════════════
+   COOK LOG SCREEN
+   ════════════════════════════════ */
+.log-comp-header{background:var(--ink);padding:12px 20px 0;flex-shrink:0;}
+.log-comp-name{font-family:'Playfair Display',serif;font-size:19px;color:#EDE8F4;margin-bottom:8px;}
+.log-tabs{display:flex;}
+.log-tab{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;color:rgba(237,232,244,.3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.log-tab.active{color:var(--berry);border-bottom-color:var(--berry);}
+
+.log-entries{flex:1;overflow-y:auto;padding:10px 16px;-webkit-overflow-scrolling:touch;}
+.log-entry{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.log-time{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink-faint);text-align:right;padding-top:1px;}
+.log-text{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);line-height:1.5;}
+.log-entry.checkpoint .log-time{color:var(--berry);}
+.log-entry.checkpoint{border-left:2px solid var(--berry);padding-left:8px;margin-left:-8px;}
+.timer-tag{font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);background:var(--amber-pale);padding:1px 5px;border-radius:3px;}
+.log-empty{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--border);text-align:center;padding:40px 20px;}
+
+/* add bar */
+.add-bar{padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--paper);}
+.add-input{flex:1;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;outline:none;resize:none;line-height:1.4;max-height:80px;}
+.add-input:focus{border-color:var(--ink-mid);}
+.check-btn{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.07em;background:var(--berry-pale);color:var(--berry);border:1px solid #D0A0B8;border-radius:6px;padding:8px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.mic-btn{width:36px;height:36px;border-radius:50%;background:var(--berry);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(176,48,96,.35);}
+
+/* timer confirm card */
+.timer-confirm{background:linear-gradient(135deg,#F8F0FC,#F0E8F8);border:1px solid rgba(176,48,96,.2);border-radius:12px;padding:12px 14px;margin:8px 16px 0;flex-shrink:0;}
+.timer-confirm-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.timer-confirm-icon{font-size:20px;}
+.timer-confirm-heard{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px;}
+.timer-confirm-summary{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-mid);line-height:1.4;}
+.timer-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px;}
+.timer-chip{font-family:'DM Mono',monospace;font-size:10px;padding:5px 10px;border-radius:6px;border:1.5px solid var(--border);color:var(--ink-soft);cursor:pointer;background:#fff;}
+.timer-chip.selected{background:var(--berry);color:#fff;border-color:var(--berry);}
+.timer-confirm-actions{display:flex;gap:6px;}
+.timer-btn-go{flex:1;background:var(--berry);color:#fff;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:9px;border-radius:7px;text-align:center;cursor:pointer;}
+.timer-btn-edit,.timer-btn-dismiss{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;padding:9px 12px;border-radius:7px;cursor:pointer;color:var(--ink-faint);border:1px solid var(--border);}
+
+/* timer running badge */
+.timer-running{background:linear-gradient(135deg,var(--amber-pale),#FFF8E8);border-bottom:1px solid rgba(192,120,32,.2);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.timer-running-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 1.5s infinite;flex-shrink:0;}
+.timer-running-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--amber);flex:1;letter-spacing:.05em;}
+.timer-running-time{font-family:'DM Mono',monospace;font-size:13px;color:var(--amber);font-weight:500;}
+
+/* voice overlay */
+.voice-overlay{position:absolute;inset:0;background:rgba(20,14,30,.88);backdrop-filter:blur(4px);z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;}
+.voice-orb{font-size:56px;animation:voicepulse 1.2s ease-in-out infinite;margin-bottom:24px;}
+@keyframes voicepulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+.voice-transcript{font-family:'DM Sans',sans-serif;font-size:16px;color:#EDE8F4;text-align:center;max-width:260px;line-height:1.6;margin-bottom:12px;}
+.voice-transcript .unsure{border-bottom:1px dashed rgba(237,232,244,.4);color:rgba(237,232,244,.6);}
+.voice-hint{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#9888B8;margin-bottom:20px;}
+.voice-cancel{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#C0B0D8;cursor:pointer;padding:10px 24px;border:1px solid rgba(237,232,244,.15);border-radius:8px;}
+
+/* ════════════════════════════════
+   JOURNAL
+   ════════════════════════════════ */
+.jlist{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.jcard{background:#fff;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;}
+.jcard:active{opacity:.9;}
+.jcard-top{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;}
+.jcard-body{flex:1;min-width:0;}
+.jcard-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);line-height:1.2;margin-bottom:2px;}
+.jcard-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink-faint);letter-spacing:.05em;}
+.jcard-stars{font-size:11px;color:var(--amber);margin-top:2px;}
+.jcard-snippet{background:var(--paper);border-top:1px solid var(--border);padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--ink-soft);line-height:1.5;font-style:italic;}
+
+/* journal drill-down */
+.jdrill-hero{height:100px;position:relative;overflow:hidden;flex-shrink:0;}
+.jdrill-chip-bg{position:absolute;inset:0;}
+.jdrill-hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,14,30,.05) 0%,rgba(20,14,30,.7) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:14px 20px;}
+.jdrill-title{font-family:'Playfair Display',serif;font-style:italic;font-size:21px;color:#EDE8F4;}
+.jdrill-meta{font-family:'DM Mono',monospace;font-size:9px;color:rgba(180,168,200,.6);letter-spacing:.07em;margin-top:3px;}
+.jdrill-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.jdrill-section-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;}
+.jdrill-stars{font-size:18px;color:var(--amber);letter-spacing:2px;cursor:pointer;}
+.jdrill-verdict{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);line-height:1.6;font-style:italic;background:var(--paper-2);border-radius:8px;padding:10px 12px;}
+.jdrill-next{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);line-height:1.6;background:var(--amber-pale);border-radius:8px;padding:10px 12px;}
+.jdrill-comps{display:flex;flex-direction:column;gap:5px;}
+.jdrill-comp{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:7px;}
+.jdrill-comp-name{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-mid);}
+.jdrill-comp-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.07em;background:var(--sage-pale);color:var(--sage);padding:2px 6px;border-radius:4px;}
+.jdrill-retro-add{margin-top:4px;background:#fff;border:1.5px dashed var(--border);border-radius:10px;padding:10px 12px;}
+.jdrill-retro-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.jdrill-retro-label::before{content:'✎';font-size:11px;}
+.jdrill-retro-input{width:100%;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-soft);line-height:1.55;resize:none;min-height:44px;font-style:italic;}
+.jdrill-retro-save{display:flex;justify-content:flex-end;margin-top:6px;}
+.jdrill-retro-note{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--ink-soft);line-height:1.55;font-style:italic;padding:6px 0;border-top:1px solid var(--border);margin-top:6px;}
+.jdrill-retro-note-meta{font-family:'DM Mono',monospace;font-size:8px;color:var(--ink-faint);margin-top:2px;}
+.btn-xs{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:#EDE8F4;border-radius:6px;padding:6px 12px;cursor:pointer;}
+
+/* ════════════════════════════════
+   QUICK NOTE MODAL
+   ════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,14,30,.72);backdrop-filter:blur(3px);z-index:30;display:flex;flex-direction:column;justify-content:flex-end;}
+.modal-sheet{background:var(--paper);border-radius:18px 18px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.35);}
+.modal-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:10px auto 14px;}
+.modal-title{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--ink);padding:0 20px 12px;border-bottom:1px solid var(--border);}
+.modal-body{padding:16px 20px;}
+.feast-picker-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px;}
+.feast-picker-opts{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.feast-pick-card{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 13px;cursor:pointer;}
+.feast-pick-card.selected{border-color:var(--berry);background:var(--berry-pale);}
+.feast-pick-name{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);font-weight:500;flex:1;}
+.feast-pick-comp{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink-faint);}
+.feast-pick-check{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;}
+.feast-pick-card.selected .feast-pick-check{background:var(--berry);border-color:var(--berry);color:#fff;font-size:9px;}
+.note-textarea{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);line-height:1.6;resize:none;min-height:80px;outline:none;}
+.note-textarea:focus{border-color:var(--berry);}
+.modal-active-feast-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 10px;background:var(--paper-2);border-radius:8px;border:1px solid var(--border);}
+.modal-feast-name{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-mid);}
+
+/* ════════════════════════════════
+   START NEW FEAST
+   ════════════════════════════════ */
+.new-feast-header{background:var(--ink);padding:20px 20px 16px;}
+.new-feast-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#9888B8;margin-bottom:6px;}
+.new-feast-title{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#EDE8F4;}
+.new-feast-sub{font-family:'DM Mono',monospace;font-size:9px;color:#C0B0D8;margin-top:5px;}
+.new-feast-body{padding:16px 16px 0;display:flex;flex-direction:column;gap:16px;}
+.form-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;display:block;}
+.form-label span{font-size:10px;letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;font-weight:400;}
+.form-input{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-family:'Playfair Display',serif;font-style:italic;font-size:17px;color:var(--ink);outline:none;line-height:1.3;}
+.form-input:focus{border-color:var(--ink-mid);}
+.form-input::placeholder{color:var(--border);}
+.form-input.sm{font-family:'DM Sans',sans-serif;font-size:13px;font-style:normal;}
+.color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.color-swatch{height:36px;border-radius:9px;cursor:pointer;position:relative;transition:transform .1s;}
+.color-swatch:hover{transform:scale(1.08);}
+.color-swatch.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(255,255,255,.9);}
+.preview-area{background:var(--paper-2);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px;}
+.preview-chip{width:56px;height:56px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:17px;font-weight:500;color:rgba(255,255,255,.88);text-transform:uppercase;position:relative;overflow:hidden;}
+.preview-chip::after{content:'';position:absolute;inset:0;background:linear-gradient(170deg,rgba(255,255,255,.12) 0%,rgba(0,0,0,.22) 100%);}
+.preview-chip-initials{position:relative;z-index:1;}
+.preview-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px;}
+.preview-name{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:var(--ink);}
+.initials-row{display:flex;gap:8px;align-items:center;}
+.initials-input{width:64px;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--ink);text-align:center;text-transform:uppercase;outline:none;letter-spacing:.1em;}
+.initials-input:focus{border-color:var(--ink-mid);}
+.initials-hint{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--ink-faint);}
+.new-feast-footer{padding:14px 16px;border-top:1px solid var(--border);background:var(--paper);flex-shrink:0;}
+
+/* ════════════════════════════════
+   SETTINGS
+   ════════════════════════════════ */
+.settings-body{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1;}
+.settings-section-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);padding:14px 4px 7px;display:block;}
+.settings-section-lbl:first-child{padding-top:4px;}
+.settings-row{background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;}
+.settings-row+.settings-row{margin-top:4px;}
+.settings-label{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);font-weight:500;}
+.settings-hint{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--ink-faint);margin-top:2px;}
+.settings-value{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-soft);text-align:right;}
+.toggle-track{width:40px;height:22px;border-radius:11px;background:var(--ink);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s;}
+.toggle-thumb{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:right .2s,left .2s;}
+.toggle-track.off{background:var(--border);}
+.toggle-track.off .toggle-thumb{right:auto;left:3px;}
+.brightness-bar{width:100%;height:6px;background:var(--border);border-radius:3px;margin-top:12px;position:relative;cursor:pointer;}
+.brightness-fill{height:100%;border-radius:3px;background:var(--amber);}
+.brightness-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--amber);position:absolute;top:-4px;margin-left:-7px;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.settings-hint-block{background:var(--amber-pale);border:1px solid rgba(192,120,32,.2);border-radius:8px;padding:9px 12px;margin-top:4px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--amber);line-height:1.5;}
+.tz-select{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-soft);background:transparent;border:none;outline:none;cursor:pointer;text-align:right;}
+
+/* ════════════════════════════════
+   CONDUCTOR BOTTOM SHEET
+   ════════════════════════════════ */
+.bs-overlay{position:fixed;inset:0;background:rgba(20,14,30,.6);backdrop-filter:blur(2px);z-index:25;display:flex;flex-direction:column;justify-content:flex-end;}
+.bs-sheet{background:linear-gradient(180deg,#2A2040,#1E1628);border-radius:16px 16px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);max-height:70vh;overflow-y:auto;}
+.bs-handle-row{display:flex;align-items:center;justify-content:center;padding:12px 16px 8px;position:relative;}
+.bs-handle{width:32px;height:3px;background:rgba(237,232,244,.2);border-radius:2px;}
+.bs-close{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#C0B0D8;cursor:pointer;position:absolute;right:16px;}
+.bs-title{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:#EDE8F4;padding:0 16px 12px;border-bottom:1px solid rgba(237,232,244,.08);}
+.bs-alerts{padding:10px 16px 16px;display:flex;flex-direction:column;gap:6px;}
+.bs-sheet-hero{display:flex;gap:14px;align-items:flex-start;padding:14px 16px 10px;}
+.bs-timer-img{width:72px;height:72px;border-radius:10px;object-fit:cover;object-position:center top;flex-shrink:0;}
+.bs-sheet-hero-text{flex:1;display:flex;flex-direction:column;justify-content:center;}
+.bs-sheet-hero-title{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:#EDE8F4;margin-bottom:3px;}
+.bs-sheet-hero-sub{font-family:'DM Mono',monospace;font-size:9px;color:#9888B8;letter-spacing:.08em;text-transform:uppercase;}
+.bs-alert{display:flex;align-items:flex-start;gap:10px;background:rgba(237,232,244,.04);border:1px solid rgba(237,232,244,.07);border-radius:9px;padding:10px 12px;}
+.bs-alert.urgent{background:rgba(176,48,96,.08);border-color:rgba(176,48,96,.2);}
+.bs-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.bs-dot-red{background:var(--berry);box-shadow:0 0 5px rgba(176,48,96,.6);}
+.bs-dot-amber{background:var(--amber);}
+.bs-dot-sage{background:var(--sage);}
+.bs-alert-text{flex:1;}
+.bs-alert-main{font-family:'DM Sans',sans-serif;font-size:12px;color:#C8B8D8;line-height:1.4;}
+.bs-alert-main strong{color:#EDE8F4;}
+.bs-alert-meta{font-family:'DM Mono',monospace;font-size:9px;color:#9888B8;margin-top:2px;}
+.bs-alert-dismiss{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#C0B0D8;cursor:pointer;padding:3px 7px;border:1px solid rgba(237,232,244,.2);border-radius:4px;white-space:nowrap;margin-top:1px;}
+.bs-feast-divider{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:#9888B8;padding:4px 0 2px;}
+
+/* ════════════════════════════════
+   FEAST COMPLETE
+   ════════════════════════════════ */
+.feast-complete-hero{height:180px;position:relative;overflow:hidden;flex-shrink:0;}
+.fc-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.fc-hero-ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,14,30,.2) 0%,rgba(20,14,30,.85) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:20px;}
+.fc-hero-title{font-family:'Playfair Display',serif;font-style:italic;font-size:26px;color:#EDE8F4;}
+.fc-hero-sub{font-family:'DM Mono',monospace;font-size:9px;color:rgba(180,168,200,.6);letter-spacing:.08em;margin-top:4px;}
+.fc-body{padding:18px 18px 0;display:flex;flex-direction:column;gap:16px;}
+.fc-section-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;}
+.star-row{display:flex;gap:8px;}
+.star{font-size:28px;color:var(--border);cursor:pointer;transition:color .1s;}
+.star.lit{color:var(--amber);}
+.fc-textarea{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-mid);line-height:1.6;resize:none;min-height:70px;outline:none;}
+.fc-textarea:focus{border-color:var(--ink-mid);}
+.fc-textarea.next-time{background:var(--amber-pale);border-color:rgba(192,120,32,.25);}
+.fc-textarea.next-time:focus{border-color:var(--amber);}
+.fc-comps-list{display:flex;flex-direction:column;gap:5px;}
+.fc-comp-item{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border:1px solid var(--border);border-radius:7px;}
+.fc-comp-name{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-mid);}
+.fc-comp-done{font-family:'DM Mono',monospace;font-size:8px;background:var(--sage-pale);color:var(--sage);padding:2px 6px;border-radius:4px;}
+.fc-footer{padding:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0;background:var(--paper);}
+
+/* ════════════════════════════════
+   ADD COMPONENT MODAL
+   ════════════════════════════════ */
+.add-comp-modal .modal-body{padding:16px 20px;}
+
+/* ════════════════════════════════
+   CONDUCTOR PLAN INPUT
+   ════════════════════════════════ */
+.plan-input{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-mid);line-height:1.6;resize:none;min-height:60px;outline:none;}
+.plan-input:focus{border-color:var(--ink-mid);}
+.plan-hint{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px;}
+
+/* ════════════════════════════════
+   TOAST
+   ════════════════════════════════ */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#EDE8F4;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;border-radius:20px;opacity:0;pointer-events:none;z-index:50;transition:opacity .2s,transform .2s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ════════════════════════════════
+   LANDSCAPE (tablet)
+   ════════════════════════════════ */
+@media (min-width:600px) and (orientation:landscape){
+
+  /* ── Home grid ── */
+  .grid-portrait{
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    grid-template-rows:2fr 1fr 0.7fr;
+    grid-auto-rows:unset;
+    align-content:stretch;
+  }
+  .gp-large{grid-column:1/3;grid-row:1/3;height:auto;}
+  .gp-medium{grid-column:3;grid-row:1;height:auto;}
+  .gp-medium2{grid-column:4;grid-row:1;height:auto;}
+  .gp-small{height:auto;}
+  .gp-small.col3r2{grid-column:3;grid-row:2;}
+  .gp-small.col4r2{grid-column:4;grid-row:2;}
+  .gp-wide{grid-column:1/-1;grid-row:3;height:auto;}
+  /* landscape-specific tile placement */
+  .gp-journal-ls{grid-column:3;grid-row:1;height:auto;}
+  .gp-wtc-ls{grid-column:4;grid-row:1;height:auto;}
+  .gp-qn-ls{grid-column:3;grid-row:2;height:auto;}
+  .gp-settings-ls{grid-column:4;grid-row:2;height:auto;}
+  /* 2-feast variant: second feast occupies col3r1, journal shifts to col4r1, wtc hidden */
+  .gp-journal-ls-2feast{grid-column:4;grid-row:1;height:auto;}
+  .gp-wtc-ls-2feast{display:none;}
+
+  /* ── Active Feast split-view ── */
+  #screen-feast.active{
+    flex-direction:row;
+    overflow:hidden;
+  }
+  .feast-left-panel{
+    width:260px;
+    flex-shrink:0;
+    background:var(--ink);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border-right:1px solid rgba(237,232,244,.06);
+  }
+  .feast-right-panel{
+    flex:1;
+    background:var(--paper);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;
+  }
+  /* hide the portrait nav and header — left panel replaces them */
+  #screen-feast .tnav,
+  #screen-feast .feast-header,
+  #screen-feast .feast-actions{
+    display:none;
+  }
+  /* conductor banner lives in left panel in landscape */
+  #screen-feast .conductor{
+    display:flex;
+  }
+  /* left panel internal layout */
+  .feast-left-inner{
+    flex:1;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:8px;
+  }
+  .feast-left-inner::-webkit-scrollbar{width:3px;}
+  .feast-left-inner::-webkit-scrollbar-track{background:transparent;}
+  .feast-left-inner::-webkit-scrollbar-thumb{background:rgba(237,232,244,.1);border-radius:3px;}
+  .feast-left-header{
+    padding:14px 16px 10px;
+    border-bottom:1px solid rgba(237,232,244,.06);
+    flex-shrink:0;
+  }
+  .feast-left-eyebrow{
+    font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;
+    text-transform:uppercase;color:#9888B8;margin-bottom:4px;
+  }
+  .feast-left-title{
+    font-family:'Playfair Display',serif;font-style:italic;
+    font-size:17px;color:#EDE8F4;line-height:1.2;
+  }
+  .feast-left-footer{
+    padding:10px 12px;
+    border-top:1px solid rgba(237,232,244,.06);
+    display:flex;gap:6px;
+    flex-shrink:0;
+  }
+  .feast-left-footer .btn-sm{flex:1;font-size:8px;padding:9px 6px;}
+  /* comp cards in left panel */
+  .feast-left-inner .comp-card{
+    margin:6px 10px;
+    background:rgba(237,232,244,.03);
+    border:1px solid rgba(237,232,244,.07);
+    border-radius:10px;
+  }
+  .feast-left-inner .comp-card.ls-selected{
+    background:rgba(237,232,244,.06);
+    border-left:2px solid var(--berry);
+  }
+  .feast-left-inner .comp-card .comp-name{color:#EDE8F4;}
+  .feast-left-inner .comp-card .comp-meta{color:#9888B8;}
+  .feast-left-inner .comp-card .s-badge{font-size:7px;}
+  .feast-left-inner .add-comp-btn{
+    margin:6px 10px 0;color:#9888B8;border-color:rgba(237,232,244,.1);
+  }
+  .feast-left-inner .add-comp-btn span{color:#9888B8;}
+  /* overtime banner in left panel */
+  .feast-left-inner .overtime-banner{margin:0 10px 6px;border-radius:10px;overflow:hidden;}
+  /* right panel empty state */
+  .ls-empty-state{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--ink-faint);font-family:'DM Mono',monospace;font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;gap:8px;
+  }
+  .ls-empty-state-icon{font-size:28px;opacity:.3;}
+
+  /* Cook Log in right panel — hide its nav, show inline */
+  #screen-feast .ls-log-panel .tnav{display:none;}
+  #screen-feast .ls-log-panel .conductor{display:none;}
+  .ls-log-panel{
+    flex:1;display:flex;flex-direction:column;overflow:hidden;
+  }
+  .ls-log-panel .log-comp-header{flex-shrink:0;}
+  .ls-log-panel .log-entries{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .ls-log-panel .log-entries::-webkit-scrollbar{width:3px;}
+  .ls-log-panel .log-entries::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  /* In landscape, screen-log is never shown standalone — redirect handled in JS */
+  #screen-log.active{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════════ HOME ══════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="tnav">
+    <div>
+      <div class="logo">Alicatatoille</div>
+      <span class="logo-sub">kitchen companion</span>
+    </div>
+    <div class="tnav-time" id="home-clock"></div>
+  </div>
+  <div class="date-row" id="home-date"></div>
+  <!-- conductor banner (shown when active feasts exist) -->
+  <div class="conductor" id="home-conductor" style="display:none;" onclick="openConductorSheet()">
+    <div class="cond-dot"></div>
+    <div class="cond-text" id="home-cond-text"><strong>—</strong></div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <div class="cond-pill" id="home-cond-pill"></div>
+      <div class="cond-chevron">▾</div>
+    </div>
+  </div>
+  <div class="grid-portrait" id="home-grid"></div>
+</div>
+
+<!-- ══════════════ ACTIVE FEAST ══════════════ -->
+<div id="screen-feast" class="screen">
+
+  <!-- PORTRAIT: nav + header (hidden in landscape via CSS) -->
+  <div class="tnav">
+    <div class="tnav-back" onclick="goHome()">← Home</div>
+    <div class="tnav-time" id="feast-clock"></div>
+  </div>
+  <div class="conductor" id="feast-conductor" style="display:none;" onclick="openConductorSheet()">
+    <div class="cond-dot"></div>
+    <div class="cond-text" id="feast-cond-text"><strong>—</strong></div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <div class="cond-pill" id="feast-cond-pill"></div>
+      <div class="cond-chevron">▾</div>
+    </div>
+  </div>
+  <div class="feast-header">
+    <div class="feast-eyebrow" id="feast-eyebrow">Active Feast</div>
+    <div class="feast-name" id="feast-name"></div>
+    <div class="feast-meta" id="feast-meta"></div>
+  </div>
+  <!-- portrait component list -->
+  <div class="scroll" id="feast-scroll">
+    <div class="components-list" id="components-list"></div>
+    <div class="add-comp-btn" onclick="openAddComp()">
+      <div style="font-size:18px;color:var(--ink-faint);line-height:1;">+</div>
+      <span>Add a component</span>
+    </div>
+  </div>
+  <!-- overtime banner (portrait) -->
+  <div class="overtime-banner" id="overtime-banner" style="display:none;">
+    <img class="ot-img" id="ot-img" src="" alt="">
+    <div class="ot-text">
+      <div class="ot-title">Good things take time.</div>
+      <div class="ot-sub">Running late — that's ok</div>
+    </div>
+  </div>
+  <div class="feast-actions">
+    <div class="btn-sm btn-complete" onclick="openFeastComplete()">Mark Complete</div>
+    <div class="btn-sm btn-ghost" onclick="openQuickNote()">Quick Note</div>
+  </div>
+
+  <!-- LANDSCAPE: left panel (component list) -->
+  <div class="feast-left-panel" id="feast-left-panel">
+    <div class="feast-left-header">
+      <div class="feast-left-eyebrow">Active Feast</div>
+      <div class="feast-left-title" id="feast-left-title"></div>
+    </div>
+    <!-- conductor in left panel -->
+    <div class="conductor" id="feast-ls-conductor" style="display:none;" onclick="openConductorSheet()">
+      <div class="cond-dot"></div>
+      <div class="cond-text" id="feast-ls-cond-text"><strong>—</strong></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <div class="cond-pill" id="feast-ls-cond-pill"></div>
+        <div class="cond-chevron">▾</div>
+      </div>
+    </div>
+    <div class="feast-left-inner" id="feast-left-inner">
+      <!-- components rendered here in landscape -->
+    </div>
+    <div class="feast-left-footer">
+      <div class="btn-sm btn-complete" style="flex:1;" onclick="openFeastComplete()">Mark Complete</div>
+      <div class="btn-sm btn-ghost" onclick="openQuickNote()">+Note</div>
+    </div>
+  </div>
+
+  <!-- LANDSCAPE: right panel (cook log) -->
+  <div class="feast-right-panel" id="feast-right-panel">
+    <!-- empty state (shown when no component selected) -->
+    <div class="ls-empty-state" id="ls-empty-state">
+      <div class="ls-empty-state-icon">📋</div>
+      <div>Select a component</div>
+    </div>
+    <!-- log panel (shown when component selected) -->
+    <div class="ls-log-panel" id="ls-log-panel" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <!-- log comp header -->
+      <div class="log-comp-header" id="ls-log-comp-header">
+        <div class="log-comp-name" id="ls-log-comp-name"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
+          <div class="log-tabs">
+            <div class="log-tab active" id="ls-tab-log" onclick="lsSwitchTab('log')">Cook Log</div>
+            <div class="log-tab" id="ls-tab-checkpoints" onclick="lsSwitchTab('checkpoints')">Checkpoints</div>
+            <div class="log-tab" id="ls-tab-plan" onclick="lsSwitchTab('plan')">Plan</div>
+          </div>
+          <div id="ls-log-status-badge" style="margin-right:0;"></div>
+        </div>
+      </div>
+      <!-- timer badge -->
+      <div class="timer-running" id="ls-timer-running" style="display:none;">
+        <div class="timer-running-dot"></div>
+        <div class="timer-running-label" id="ls-timer-label">Timer</div>
+        <div class="timer-running-time" id="ls-timer-display">0:00:00</div>
+      </div>
+      <!-- timer confirm -->
+      <div class="timer-confirm" id="ls-timer-confirm-card" style="display:none;">
+        <div class="timer-confirm-header">
+          <div class="timer-confirm-icon">⏱</div>
+          <div class="timer-confirm-text">
+            <div class="timer-confirm-heard">Heard this</div>
+            <div class="timer-confirm-summary" id="ls-timer-confirm-summary"></div>
+          </div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#9888B8;margin-bottom:6px;">Set timer for…</div>
+        <div class="timer-chips" id="ls-timer-chip-row"></div>
+        <div class="timer-confirm-actions">
+          <div class="timer-btn-go" id="ls-timer-btn-go">Start timer</div>
+          <div class="timer-btn-dismiss" onclick="dismissTimerConfirm()">Skip</div>
+        </div>
+      </div>
+      <!-- log entries -->
+      <div class="log-entries" id="ls-log-entries" style="flex:1;overflow-y:auto;"></div>
+      <!-- plan tab -->
+      <div id="ls-plan-tab-content" style="display:none;flex:1;padding:14px 16px;overflow-y:auto;">
+        <div class="fc-section-lbl">Conductor plan</div>
+        <textarea class="plan-input" id="ls-plan-input" placeholder="Sketch the plan…" rows="4"></textarea>
+        <div class="plan-hint">This feeds the conductor banner to keep you on track.</div>
+        <div style="margin-top:10px;"><div class="btn-xs" onclick="lsSavePlan()">Save plan</div></div>
+      </div>
+      <!-- add bar -->
+      <div class="add-bar" id="ls-add-bar">
+        <textarea class="add-input" id="ls-log-input" placeholder="Add a note…" rows="1" oninput="autoResize(this)"></textarea>
+        <div class="check-btn" onclick="lsAddCheckpoint()">✓ mark</div>
+        <div class="mic-btn" onclick="startVoice()">🎙</div>
+      </div>
+    </div>
+    <!-- voice overlay (shared, covers full screen) -->
+  </div>
+
+</div>
+
+<!-- ══════════════ COOK LOG ══════════════ -->
+<div id="screen-log" class="screen">
+  <div class="tnav">
+    <div class="tnav-back" id="log-back" onclick="backToFeast()">← Feast</div>
+    <div class="tnav-time" id="log-clock"></div>
+  </div>
+  <div class="conductor" id="log-conductor" style="display:none;" onclick="openConductorSheet()">
+    <div class="cond-dot"></div>
+    <div class="cond-text" id="log-cond-text"><strong>—</strong></div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <div class="cond-pill" id="log-cond-pill"></div>
+      <div class="cond-chevron">▾</div>
+    </div>
+  </div>
+  <div class="log-comp-header">
+    <div class="log-comp-name" id="log-comp-name"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
+      <div class="log-tabs">
+        <div class="log-tab active" id="tab-log" onclick="switchLogTab('log')">Cook Log</div>
+        <div class="log-tab" id="tab-checkpoints" onclick="switchLogTab('checkpoints')">Checkpoints</div>
+        <div class="log-tab" id="tab-plan" onclick="switchLogTab('plan')">Plan</div>
+      </div>
+      <div id="log-status-badge" style="margin-right:0;"></div>
+    </div>
+  </div>
+  <div class="timer-running" id="log-timer-running" style="display:none;">
+    <div class="timer-running-dot"></div>
+    <div class="timer-running-label" id="timer-label">Timer</div>
+    <div class="timer-running-time" id="timer-display">0:00:00</div>
+  </div>
+  <div class="timer-confirm" id="timer-confirm-card" style="display:none;">
+    <div class="timer-confirm-header">
+      <div class="timer-confirm-icon">⏱</div>
+      <div class="timer-confirm-text">
+        <div class="timer-confirm-heard">Heard this</div>
+        <div class="timer-confirm-summary" id="timer-confirm-summary"></div>
+      </div>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#9888B8;margin-bottom:6px;">Set timer for…</div>
+    <div class="timer-chips" id="timer-chip-row"></div>
+    <div class="timer-confirm-actions">
+      <div class="timer-btn-go" id="timer-btn-go">Start timer</div>
+      <div class="timer-btn-dismiss" onclick="dismissTimerConfirm()">Skip</div>
+    </div>
+  </div>
+  <div class="log-entries" id="log-entries"></div>
+  <!-- plan tab content -->
+  <div id="plan-tab-content" style="display:none;flex:1;padding:14px 16px;">
+    <div class="fc-section-lbl">Conductor plan</div>
+    <textarea class="plan-input" id="plan-input" placeholder="Sketch the plan — e.g. 'confit at 180°F for 8h, then breadcrumbs 20min before serving'" rows="4"></textarea>
+    <div class="plan-hint">This feeds the conductor banner to keep you on track.</div>
+    <div style="margin-top:10px;">
+      <div class="btn-xs" onclick="savePlan()">Save plan</div>
+    </div>
+  </div>
+  <div class="add-bar" id="log-add-bar">
+    <textarea class="add-input" id="log-input" placeholder="Add a note…" rows="1" oninput="autoResize(this)"></textarea>
+    <div class="check-btn" onclick="addCheckpoint()">✓ mark</div>
+    <div class="mic-btn" onclick="startVoice()">🎙</div>
+  </div>
+  <!-- voice overlay -->
+  <div class="voice-overlay" id="voice-overlay" style="display:none;" onclick="stopVoice()">
+    <div class="voice-orb">🎙</div>
+    <div class="voice-transcript" id="voice-transcript">Listening…</div>
+    <div class="voice-hint">Tap anywhere to stop</div>
+    <div class="voice-cancel" onclick="cancelVoice(event)">Cancel</div>
+  </div>
+</div>
+
+<!-- ══════════════ JOURNAL LIST ══════════════ -->
+<div id="screen-journal" class="screen">
+  <div class="tnav">
+    <div class="tnav-back" onclick="goHome()">← Home</div>
+    <div class="logo" style="font-size:15px;">Alicatatoille</div>
+    <div class="tnav-time" id="journal-clock"></div>
+  </div>
+  <div class="inner-header">
+    <div class="inner-eyebrow">Journal</div>
+    <div class="inner-title">Past Feasts</div>
+    <div class="inner-meta" id="journal-meta"></div>
+  </div>
+  <div class="scroll" style="background:var(--paper);">
+    <div class="jlist" id="journal-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════ JOURNAL DRILL-DOWN ══════════════ -->
+<div id="screen-journal-entry" class="screen">
+  <div class="tnav">
+    <div class="tnav-back" onclick="showScreen('journal')">← Journal</div>
+    <div class="tnav-time" id="jentry-clock"></div>
+  </div>
+  <div class="jdrill-hero">
+    <div class="jdrill-chip-bg" id="jdrill-chip-bg"></div>
+    <div style="position:absolute;right:-8px;top:-8px;font-family:'DM Mono',monospace;font-size:90px;font-weight:500;color:rgba(255,255,255,.06);text-transform:uppercase;line-height:1;pointer-events:none;" id="jdrill-watermark"></div>
+    <div class="jdrill-hero-overlay">
+      <div class="jdrill-title" id="jdrill-title"></div>
+      <div class="jdrill-meta" id="jdrill-meta"></div>
+    </div>
+  </div>
+  <div class="scroll" style="background:var(--paper);">
+    <div class="jdrill-body" id="jdrill-body"></div>
+  </div>
+</div>
+
+<!-- ══════════════ NEW FEAST ══════════════ -->
+<div id="screen-new-feast" class="screen">
+  <div class="tnav">
+    <div class="tnav-back" onclick="goHome()">← Home</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="new-feast-header">
+    <div class="new-feast-eyebrow">New feast</div>
+    <div class="new-feast-title">What are you cooking?</div>
+    <div class="new-feast-sub">Name it · pick a color · start cooking</div>
+  </div>
+  <div class="scroll" style="background:var(--paper);">
+    <div class="new-feast-body">
+      <div>
+        <label class="form-label">Feast name</label>
+        <input class="form-input" id="nf-name" placeholder="e.g. Christmas Cassoulet" oninput="nfUpdate()" />
+      </div>
+      <div>
+        <label class="form-label">Source <span>— optional</span></label>
+        <input class="form-input sm" id="nf-source" placeholder="URL, cookbook, chef's name…" />
+      </div>
+      <div>
+        <label class="form-label">Color</label>
+        <div class="color-grid" id="nf-color-grid"></div>
+      </div>
+      <div>
+        <label class="form-label">Initials on tile</label>
+        <div class="initials-row">
+          <input class="initials-input" id="nf-initials" placeholder="CC" maxlength="3" oninput="nfUpdateInitials()" />
+          <div class="initials-hint">Auto-generated · tap to edit</div>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Preview</label>
+        <div class="preview-area">
+          <div class="preview-chip" id="nf-preview-chip"><span class="preview-chip-initials" id="nf-preview-init">—</span></div>
+          <div>
+            <div class="preview-label">This is how your feast tile will look</div>
+            <div class="preview-name" id="nf-preview-name" style="color:var(--ink-faint);font-style:italic;">Enter a name above</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="new-feast-footer">
+    <div class="btn-primary" id="nf-create-btn" style="opacity:.4;pointer-events:none;" onclick="createFeast()">Create Feast</div>
+  </div>
+</div>
+
+<!-- ══════════════ SETTINGS ══════════════ -->
+<div id="screen-settings" class="screen">
+  <div class="tnav">
+    <div class="tnav-back" onclick="goHome()">← Home</div>
+    <div class="logo" style="font-size:16px;">Alicatatoille</div>
+    <div class="tnav-time" id="settings-clock"></div>
+  </div>
+  <div class="inner-header">
+    <div class="inner-eyebrow">Preferences</div>
+    <div class="inner-title">Settings</div>
+  </div>
+  <div class="scroll" style="background:var(--paper);">
+    <div class="settings-body">
+      <span class="settings-section-lbl">Location & Time</span>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Timezone</div>
+          <div class="settings-hint">Used for timestamps in your cook log</div>
+        </div>
+        <select class="tz-select" id="tz-select" onchange="saveSetting('timezone',this.value)">
+          <option value="America/New_York">EST</option>
+          <option value="America/Chicago">CST</option>
+          <option value="America/Denver">MST</option>
+          <option value="America/Los_Angeles">PST</option>
+          <option value="Europe/London">GMT</option>
+          <option value="Europe/Paris">CET</option>
+        </select>
+      </div>
+      <span class="settings-section-lbl">Kitchen Mode</span>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Kiosk mode</div>
+          <div class="settings-hint">Keeps screen on, prevents auto-lock</div>
+        </div>
+        <div class="toggle-track" id="kiosk-toggle" onclick="toggleKiosk()">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      <span class="settings-section-lbl">Display</span>
+      <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="settings-label">Screen brightness</div>
+            <div class="settings-hint">Tap and drag</div>
+          </div>
+          <div class="settings-value" id="brightness-val">75%</div>
+        </div>
+        <div class="brightness-bar" id="brightness-bar">
+          <div class="brightness-fill" id="brightness-fill" style="width:75%"></div>
+          <div class="brightness-thumb" id="brightness-thumb" style="left:75%"></div>
+        </div>
+      </div>
+      <div class="settings-hint-block">💡 For best readability in kitchen lighting, try 70–85%. Your device's auto-brightness may override this.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FEAST COMPLETE ══════════════ -->
+<div id="screen-complete" class="screen">
+  <div class="tnav">
+    <div class="tnav-back" onclick="backToFeast()">← Feast</div>
+    <div class="tnav-time" id="complete-clock"></div>
+  </div>
+  <div class="scroll" style="background:var(--paper);">
+    <div class="feast-complete-hero">
+      <img class="fc-hero-img" src="" alt="" id="fc-hero-img">
+      <div class="fc-hero-ov">
+        <div class="fc-hero-title" id="fc-hero-title"></div>
+        <div class="fc-hero-sub" id="fc-hero-sub"></div>
+      </div>
+    </div>
+    <div class="fc-body">
+      <div>
+        <div class="fc-section-lbl">How did it go?</div>
+        <div class="star-row" id="star-row"></div>
+      </div>
+      <div>
+        <div class="fc-section-lbl">Verdict</div>
+        <textarea class="fc-textarea" id="fc-verdict" placeholder="How did it turn out? What surprised you?" rows="3"></textarea>
+      </div>
+      <div>
+        <div class="fc-section-lbl">Next time I'd…</div>
+        <textarea class="fc-textarea next-time" id="fc-next-time" placeholder="The most important field. What would you do differently?" rows="3"></textarea>
+      </div>
+      <div>
+        <div class="fc-section-lbl">Components</div>
+        <div class="fc-comps-list" id="fc-comps-list"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fc-footer">
+    <div class="btn-berry" onclick="saveFeastToJournal()">Save to Journal</div>
+    <div class="btn-secondary" onclick="backToFeast()">Save later</div>
+  </div>
+</div>
+
+<!-- ══════════════ OVERLAYS ══════════════ -->
+
+<!-- Quick Note Modal -->
+<div class="modal-overlay" id="quick-note-modal" style="display:none;" onclick="closeModalOnScrim(event,'quick-note-modal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Quick Note</div>
+    <div class="modal-body" id="quick-note-body"></div>
+    <div class="btn-row">
+      <div class="btn-secondary" onclick="closeModal('quick-note-modal')">Cancel</div>
+      <div class="btn-berry" onclick="saveQuickNote()">Save note</div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Component Modal -->
+<div class="modal-overlay" id="add-comp-modal" style="display:none;" onclick="closeModalOnScrim(event,'add-comp-modal')">
+  <div class="modal-sheet add-comp-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a component</div>
+    <div class="modal-body">
+      <label class="form-label">Component name</label>
+      <input class="form-input" id="comp-name-input" placeholder="e.g. Duck Confit" style="margin-bottom:10px;" />
+      <label class="form-label" style="margin-top:8px;">Recipe URL <span style="font-size:10px;letter-spacing:0;text-transform:none;font-family:'DM Sans',sans-serif;font-weight:400;">— optional</span></label>
+      <input class="form-input sm" id="comp-url-input" placeholder="https://…" />
+    </div>
+    <div class="btn-row">
+      <div class="btn-secondary" onclick="closeModal('add-comp-modal')">Cancel</div>
+      <div class="btn-berry" onclick="addComponent()">Add component</div>
+    </div>
+  </div>
+</div>
+
+<!-- Conductor Bottom Sheet -->
+<div class="bs-overlay" id="conductor-sheet" style="display:none;" onclick="closeConductorOnScrim(event)">
+  <div class="bs-sheet">
+    <div class="bs-sheet-hero">
+      <img class="bs-timer-img" id="bs-timer-hero" src="" alt="">
+      <div class="bs-sheet-hero-text">
+        <div class="bs-sheet-hero-title" id="bs-title">All alerts</div>
+        <div class="bs-sheet-hero-sub">What needs attention</div>
+      </div>
+      <div class="bs-close" onclick="closeConductorSheet()">Close</div>
+    </div>
+    <div class="bs-alerts" id="bs-alerts"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+</div><!-- /#app -->
+
+<script>
+// ═══════════════════════════════════════════
+// DATA LAYER
+// ═══════════════════════════════════════════
+
+const KEYS = {
+  feasts:'alicat_feasts',
+  components:'alicat_components',
+  log:'alicat_log',
+  timers:'alicat_timers',
+  state:'alicat_state'
+};
+
+function load(key){try{return JSON.parse(localStorage.getItem(key))||[];}catch{return [];}}
+function loadObj(key,def={}){try{return JSON.parse(localStorage.getItem(key))||def;}catch{return def;}}
+function save(key,val){localStorage.setItem(key,JSON.stringify(val));}
+
+function getFeasts(){return load(KEYS.feasts);}
+function saveFeasts(f){save(KEYS.feasts,f);}
+function getComponents(){return load(KEYS.components);}
+function saveComponents(c){save(KEYS.components,c);}
+function getLog(){return load(KEYS.log);}
+function saveLog(l){save(KEYS.log,l);}
+function getTimers(){return load(KEYS.timers);}
+function saveTimers(t){save(KEYS.timers,t);}
+function getState(){return loadObj(KEYS.state,{timezone:'America/New_York',kioskMode:false,brightness:75});}
+function saveState(s){save(KEYS.state,s);}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+const COLOR_CLASSES=['fc-crimson','fc-indigo','fc-forest','fc-sienna','fc-slate-b','fc-plum','fc-ochre','fc-teal','fc-burgundy','fc-umber'];
+const COLOR_NAMES=['Crimson','Indigo','Forest','Sienna','Slate','Plum','Ochre','Teal','Burgundy','Umber'];
+
+function autoInitials(name){
+  if(!name) return '';
+  const words=name.trim().split(/\s+/).filter(Boolean);
+  if(words.length===1) return words[0].slice(0,2).toUpperCase();
+  return words.slice(0,3).map(w=>w[0]).join('').toUpperCase();
+}
+
+// seed demo data on first load
+function seedDemoData(){
+  if(getFeasts().length>0) return;
+  const feasts=[
+    {id:'f1',name:'Christmas Cassoulet',source:'Paula Wolfert · The Cooking of Southwest France',colorClass:'fc-sienna',initials:'CC',status:'active',startDate:new Date().toISOString(),targetDate:null,outcome:{rating:0,verdict:'',nextTime:'',completedAt:null},retroNotes:[]},
+    {id:'f2',name:'Birthday Paella',source:'',colorClass:'fc-indigo',initials:'BP',status:'complete',startDate:new Date(Date.now()-7*86400000).toISOString(),targetDate:null,outcome:{rating:5,verdict:'Best rice ratio I\'ve ever gotten. Finally nailed the socarrat.',nextTime:'Keep the heat higher at the end to get the crust. And more saffron.',completedAt:new Date(Date.now()-7*86400000).toISOString()},retroNotes:[]},
+    {id:'f3',name:'Ratatouille Tian',source:'',colorClass:'fc-forest',initials:'RT',status:'complete',startDate:new Date(Date.now()-30*86400000).toISOString(),targetDate:null,outcome:{rating:4,verdict:'Provençal herbs from the garden made all the difference.',nextTime:'Slice the zucchini thinner — some pieces were too thick.',completedAt:new Date(Date.now()-30*86400000).toISOString()},retroNotes:[]},
+    {id:'f4',name:'Red Braised Short Rib',source:'',colorClass:'fc-burgundy',initials:'RB',status:'complete',startDate:new Date(Date.now()-60*86400000).toISOString(),targetDate:null,outcome:{rating:3,verdict:'Good bones but under-seasoned at the braise stage.',nextTime:'Season the braising liquid more aggressively. Add more aromatics.',completedAt:new Date(Date.now()-60*86400000).toISOString()},retroNotes:[]},
+    {id:'f5',name:'Miso-Poached Salmon',source:'',colorClass:'fc-ochre',initials:'MP',status:'complete',startDate:new Date(Date.now()-90*86400000).toISOString(),targetDate:null,outcome:{rating:5,verdict:'Simplest feast I\'ve done. The glaze alone is worth repeating.',nextTime:'Try with halibut next time. And double the glaze recipe.',completedAt:new Date(Date.now()-90*86400000).toISOString()},retroNotes:[{id:'r1',text:'Made this again for a dinner party — doubled the recipe and it worked perfectly.',createdAt:new Date(Date.now()-14*86400000).toISOString()}]}
+  ];
+  const comps=[
+    {id:'c1',feastId:'f1',name:'Duck Confit',status:'in_progress',startedAt:new Date(Date.now()-2*3600000).toISOString(),conductorPlan:'Confit at 180°F for 8h. Rest 30min before shredding. Start Cassoulet Base once duck is resting.',recipeUrl:'',log:[]},
+    {id:'c2',feastId:'f1',name:'Cassoulet Base',status:'not_started',startedAt:null,conductorPlan:'Start 3h before serving. Reduce heat once it simmers.',recipeUrl:'',log:[]},
+    {id:'c3',feastId:'f1',name:'Herbed Breadcrumbs',status:'not_started',startedAt:null,conductorPlan:'Toast 20min before serving.',recipeUrl:'',log:[]},
+    {id:'c4',feastId:'f1',name:'Garlic Confit Oil',status:'done',startedAt:new Date(Date.now()-5*3600000).toISOString(),conductorPlan:'',recipeUrl:'',log:[]},
+    {id:'c5',feastId:'f2',name:'Sofrito Base',status:'done',startedAt:null,conductorPlan:'',recipeUrl:'',log:[]},
+    {id:'c6',feastId:'f2',name:'Paella Rice',status:'done',startedAt:null,conductorPlan:'',recipeUrl:'',log:[]},
+    {id:'c7',feastId:'f2',name:'Seafood',status:'done',startedAt:null,conductorPlan:'',recipeUrl:'',log:[]},
+  ];
+  const logEntries=[
+    {id:'l1',componentId:'c1',type:'note',text:'Duck legs out of the cure. Rinsed and dried.',createdAt:new Date(Date.now()-2*3600000-30*60000).toISOString(),timerTag:null},
+    {id:'l2',componentId:'c1',type:'checkpoint',text:'Into the oven at 180°F. Fat is clean and clear.',createdAt:new Date(Date.now()-2*3600000).toISOString(),timerTag:null},
+    {id:'l3',componentId:'c1',type:'note',text:'155°F internal. Fat beautifully clear.',createdAt:new Date(Date.now()-30*60000).toISOString(),timerTag:null},
+  ];
+  saveFeasts(feasts);saveComponents(comps);saveLog(logEntries);
+}
+
+// ═══════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════
+
+let currentFeastId=null;
+let currentCompId=null;
+let currentLogTab='log';
+let selectedTimerDuration=null;
+let recognition=null;
+let wakeLock=null;
+let timerInterval=null;
+let clockInterval=null;
+let nfSelectedColor=COLOR_CLASSES[0];
+let selectedQuickNoteFeastId=null;
+
+// ═══════════════════════════════════════════
+// ROUTING
+// ═══════════════════════════════════════════
+
+function _showScreenBase(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const s=document.getElementById('screen-'+id);
+  if(s) s.classList.add('active');
+}
+
+function goHome(){
+  renderHome();
+  showScreen('home');
+}
+
+function backToFeast(){
+  renderFeast(currentFeastId);
+  showScreen('feast');
+}
+
+// ═══════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════
+
+function formatTime(){
+  const now=new Date();
+  return now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+}
+function formatDate(){
+  const now=new Date();
+  return now.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+}
+function startClock(){
+  function tick(){
+    const t=formatTime();
+    ['home','feast','log','journal','jentry','settings','complete'].forEach(id=>{
+      const el=document.getElementById(id+'-clock');
+      if(el) el.textContent=t;
+    });
+  }
+  tick();
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval=setInterval(tick,30000);
+  const d=document.getElementById('home-date');
+  if(d) d.textContent=formatDate();
+}
+
+// ═══════════════════════════════════════════
+// HOME SCREEN
+// ═══════════════════════════════════════════
+
+function renderHome(){
+  const feasts=getFeasts();
+  const active=feasts.filter(f=>f.status==='active');
+  const grid=document.getElementById('home-grid');
+
+  // conductor
+  const cond=document.getElementById('home-conductor');
+  updateConductorBanner('home',active);
+
+  let html='';
+  if(active.length===0){
+    // empty state
+    html+=`<div class="tile t-new gp-large" onclick="showScreen('new-feast');initNewFeast()">
+      <div class="tile-content">
+        <div class="t-new-plus">+</div>
+        <div class="t-new-label">Start your first feast</div>
+      </div>
+    </div>`;
+  } else {
+    const primary=active[0];
+    const comps=getComponents().filter(c=>c.feastId===primary.id);
+    const cookingComps=comps.filter(c=>c.status==='in_progress');
+    const doneCount=comps.filter(c=>c.status==='done').length;
+    const pips=comps.map(c=>`<div class="t-pip" style="background:${statusPipColor(c.status)};"></div>`).join('');
+
+    html+=`<div class="tile t-active gp-large" onclick="openFeast('${primary.id}')">
+      <div class="t-active-chip ${primary.colorClass}"></div>
+      <div class="chip-bg-initials">${primary.initials}</div>
+      <div class="tile-content">
+        <div class="tile-eyebrow">Active feast</div>
+        <div class="tile-title" style="font-size:20px;">${esc(primary.name)}</div>
+        <div class="tile-sub">${comps.length} component${comps.length!==1?'s':''} · ${doneCount} done</div>
+        <div class="pip-row">${pips}</div>
+      </div>
+    </div>`;
+
+    if(active.length>1){
+      const second=active[1];
+      const scomps=getComponents().filter(c=>c.feastId===second.id);
+      html+=`<div class="tile t-active2 gp-medium" onclick="openFeast('${second.id}')">
+        <div class="t-active-chip ${second.colorClass}" style="border-radius:14px;"></div>
+        <div style="position:absolute;right:-4px;top:-4px;font-family:'DM Mono',monospace;font-size:52px;font-weight:500;color:rgba(255,255,255,.06);text-transform:uppercase;pointer-events:none;line-height:1;">${second.initials}</div>
+        <div class="tile-content">
+          <div class="tile-eyebrow">Also active</div>
+          <div class="tile-title" style="font-size:15px;">${esc(second.name)}</div>
+          <div class="tile-sub">${scomps.length} components</div>
+        </div>
+      </div>`;
+    }
+  }
+
+  // journal tile
+  const completed=feasts.filter(f=>f.status==='complete');
+  const _imgJ=typeof IMG_JOURNAL!=='undefined'?IMG_JOURNAL:'';
+  const _imgQN=typeof IMG_QUICKNOTE!=='undefined'?IMG_QUICKNOTE:'';
+  const _imgSt=typeof IMG_SETTINGS!=='undefined'?IMG_SETTINGS:'';
+  const _imgNF=typeof IMG_START!=='undefined'?IMG_START:'';
+  const twoFeasts=active.length>=2;
+  const journalLsCls=twoFeasts?'gp-journal-ls-2feast':'gp-journal-ls';
+  const wtcLsCls=twoFeasts?'gp-wtc-ls-2feast':'gp-wtc-ls';
+  html+=`<div class="tile t-journal gp-small ${journalLsCls}" onclick="openJournal()">
+    <img class="t-tile-img" src="${_imgJ}" alt="">
+    <div class="t-journal-ov"></div>
+    <div class="tile-content">
+      <div class="tile-eyebrow">Journal</div>
+      <div class="tile-title" style="font-size:14px;">Past Feasts</div>
+      <div class="tile-sub" style="color:rgba(180,168,200,.45);">${completed.length} recorded</div>
+    </div>
+  </div>`;
+
+  // what to cook tile
+  const _imgWTC=typeof IMG_WHATTOCOOK!=='undefined'?IMG_WHATTOCOOK:'';
+  html+=`<div class="tile t-wtc gp-small ${wtcLsCls}" onclick="showScreen('what-to-cook')">
+    <img class="t-tile-img" src="${_imgWTC}" alt="">
+    <div class="t-wtc-ov"></div>
+    <div class="tile-content">
+      <div class="tile-eyebrow">Decide</div>
+      <div class="tile-title" style="font-size:14px;">What to Cook?</div>
+    </div>
+  </div>`;
+
+  // quick note tile
+  html+=`<div class="tile t-note gp-small gp-qn-ls" onclick="openQuickNote()">
+    <img class="t-tile-img" src="${_imgQN}" alt="">
+    <div class="t-note-ov"></div>
+    <div class="tile-content">
+      <div class="tile-eyebrow">Quick</div>
+      <div class="tile-title" style="font-size:14px;">Quick Note</div>
+    </div>
+  </div>`;
+
+  // settings tile
+  html+=`<div class="tile t-settings gp-small gp-settings-ls" onclick="showScreen('settings')">
+    <img class="t-tile-img" src="${_imgSt}" alt="">
+    <div class="t-settings-ov"></div>
+    <div class="tile-content">
+      <div class="tile-eyebrow">Preferences</div>
+      <div class="tile-title" style="font-size:14px;">Settings</div>
+    </div>
+  </div>`;
+
+  // start new feast tile
+  html+=`<div class="tile t-new gp-wide" onclick="showScreen('new-feast');initNewFeast()">
+    <img class="t-tile-img" src="${_imgNF}" alt="" style="object-position:center 20%;">
+    <div style="position:absolute;inset:0;border-radius:14px;background:linear-gradient(135deg,rgba(20,14,30,.08) 0%,rgba(20,14,30,.55) 100%);"></div>
+    <div class="tile-content">
+      <div class="t-new-plus">+</div>
+      <div class="t-new-label">Start a New Feast</div>
+    </div>
+  </div>`;
+
+  grid.innerHTML=html;
+}
+
+function statusPipColor(s){
+  if(s==='in_progress') return 'var(--amber)';
+  if(s==='resting') return 'var(--sage)';
+  if(s==='done') return 'rgba(100,96,120,.4)';
+  return 'rgba(237,232,244,.12)';
+}
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ═══════════════════════════════════════════
+// ACTIVE FEAST SCREEN
+// ═══════════════════════════════════════════
+
+function openFeast(feastId){
+  currentFeastId=feastId;
+  renderFeast(feastId);
+  showScreen('feast');
+}
+
+function _renderFeastBase(feastId){
+  if(!feast) return;
+  const active=feasts.filter(f=>f.status==='active');
+
+  document.getElementById('feast-name').textContent=feast.name;
+  document.getElementById('feast-eyebrow').textContent=feast.source||'Active Feast';
+  const started=feast.startDate?new Date(feast.startDate):new Date();
+  document.getElementById('feast-meta').textContent=`Started ${started.toLocaleDateString([],{month:'short',day:'numeric'})}`;
+
+  updateConductorBanner('feast',active);
+
+  const comps=getComponents().filter(c=>c.feastId===feastId);
+  let html='';
+  comps.forEach(c=>{
+    const statusLabel={not_started:'Not started',in_progress:'Cooking',resting:'Resting',done:'Done'}[c.status]||c.status;
+    const sBadge='s-'+c.status.replace('_','-');
+    const logCount=getLog().filter(l=>l.componentId===c.id).length;
+    html+=`<div class="comp-card" onclick="openLog('${c.id}')">
+      <div class="comp-card-row">
+        <div>
+          <div class="comp-name">${esc(c.name)}</div>
+          <div class="comp-meta">${logCount} log entr${logCount!==1?'ies':'y'}${c.recipeUrl?` · <a href="${esc(c.recipeUrl)}" target="_blank" style="color:var(--slate);">recipe ↗</a>`:''}  </div>
+        </div>
+        <div>
+          <div class="s-badge ${sBadge}">${statusLabel}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+        ${c.status!=='done'?`<div onclick="cycleStatus(event,'${c.id}')" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;">Advance →</div>`:''}
+        ${c.status==='in_progress'?`<div onclick="openLog('${c.id}')" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);border:1px solid rgba(90,104,136,.25);border-radius:4px;padding:3px 8px;cursor:pointer;">Open log</div>`:''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('components-list').innerHTML=html;
+
+  // overtime banner: if any comp has been in_progress > 8h
+  const now=Date.now();
+  const overtime=comps.some(c=>c.status==='in_progress'&&c.startedAt&&(now-new Date(c.startedAt).getTime())>8*3600000);
+  document.getElementById('overtime-banner').style.display=overtime?'flex':'none';
+}
+
+function cycleStatus(e,compId){
+  e.stopPropagation();
+  const comps=getComponents();
+  const c=comps.find(x=>x.id===compId);
+  if(!c) return;
+  const order=['not_started','in_progress','resting','done'];
+  const idx=order.indexOf(c.status);
+  c.status=order[Math.min(idx+1,order.length-1)];
+  if(c.status==='in_progress'&&!c.startedAt) c.startedAt=new Date().toISOString();
+  saveComponents(comps);
+  renderFeast(currentFeastId);
+  showToast('Status updated');
+}
+
+// ═══════════════════════════════════════════
+// COOK LOG SCREEN
+// ═══════════════════════════════════════════
+
+function _openLogBase(compId){
+  renderLog();
+  showScreen('log');
+}
+
+function renderLog(){
+  const comps=getComponents();
+  const comp=comps.find(c=>c.id===currentCompId);
+  if(!comp) return;
+  const feasts=getFeasts();
+  const feast=feasts.find(f=>f.id===comp.feastId)||{};
+
+  document.getElementById('log-comp-name').textContent=comp.name;
+  document.getElementById('log-back').onclick=()=>{backToFeast();};
+
+  // status badge
+  const statusLabel={not_started:'Not started',in_progress:'Cooking',resting:'Resting',done:'Done'}[comp.status];
+  const sBadge='s-'+comp.status.replace('_','-');
+  document.getElementById('log-status-badge').innerHTML=`<div class="s-badge ${sBadge}" style="margin:0 16px 8px 0;">${statusLabel}</div>`;
+
+  updateConductorBanner('log',[feast]);
+
+  switchLogTab(currentLogTab,true);
+  renderTimerBadge();
+}
+
+function switchLogTab(tab,force=false){
+  if(tab===currentLogTab&&!force&&tab!=='log') return;
+  currentLogTab=tab;
+  ['log','checkpoints','plan'].forEach(t=>{
+    document.getElementById('tab-'+t)?.classList.toggle('active',t===tab);
+  });
+
+  const planContent=document.getElementById('plan-tab-content');
+  const logEntries=document.getElementById('log-entries');
+  const addBar=document.getElementById('log-add-bar');
+
+  if(tab==='plan'){
+    planContent.style.display='flex';
+    planContent.style.flexDirection='column';
+    logEntries.style.display='none';
+    addBar.style.display='none';
+    const comp=getComponents().find(c=>c.id===currentCompId);
+    if(comp) document.getElementById('plan-input').value=comp.conductorPlan||'';
+  } else {
+    planContent.style.display='none';
+    logEntries.style.display='';
+    addBar.style.display='';
+    const allLog=getLog().filter(l=>l.componentId===currentCompId);
+    const entries=tab==='checkpoints'?allLog.filter(l=>l.type==='checkpoint'):allLog;
+    if(entries.length===0){
+      document.getElementById('log-entries').innerHTML=`<div class="log-empty">${tab==='checkpoints'?'No checkpoints yet':'No entries yet'}</div>`;
+      return;
+    }
+    let html='';
+    entries.forEach(e=>{
+      const t=new Date(e.createdAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+      const timerBit=e.timerTag?` <span class="timer-tag">⏱ ${e.timerTag}</span>`:'';
+      html+=`<div class="log-entry${e.type==='checkpoint'?' checkpoint':''}">
+        <div class="log-time">${t}</div>
+        <div class="log-text">${esc(e.text)}${timerBit}</div>
+      </div>`;
+    });
+    document.getElementById('log-entries').innerHTML=html;
+    // scroll to bottom
+    const el=document.getElementById('log-entries');
+    el.scrollTop=el.scrollHeight;
+  }
+}
+
+function addNote(text,type='note',timerTag=null){
+  if(!text.trim()) return;
+  const log=getLog();
+  log.push({id:uid(),componentId:currentCompId,type,text:text.trim(),createdAt:new Date().toISOString(),timerTag});
+  saveLog(log);
+  document.getElementById('log-input').value='';
+  switchLogTab(currentLogTab,true);
+}
+
+function addCheckpoint(){
+  const input=document.getElementById('log-input');
+  const text=input.value.trim();
+  if(!text){showToast('Type something first');return;}
+  addNote(text,'checkpoint');
+  showToast('Checkpoint saved');
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,80)+'px';
+}
+
+document.getElementById('log-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const v=e.target.value.trim();if(v){addNote(v);}}
+});
+
+function savePlan(){
+  const comps=getComponents();
+  const c=comps.find(x=>x.id===currentCompId);
+  if(!c) return;
+  c.conductorPlan=document.getElementById('plan-input').value;
+  saveComponents(comps);
+  showToast('Plan saved');
+}
+
+// ═══════════════════════════════════════════
+// VOICE INPUT
+// ═══════════════════════════════════════════
+
+let voiceText='';
+let voiceActive=false;
+
+function startVoice(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    showToast('Voice not supported in this browser');return;
+  }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();
+  recognition.continuous=false;
+  recognition.interimResults=true;
+  recognition.lang='en-US';
+  voiceActive=true;
+  document.getElementById('voice-overlay').style.display='flex';
+  document.getElementById('voice-transcript').innerHTML='Listening…';
+
+  recognition.onresult=e=>{
+    let interim='',final='';
+    for(let i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    voiceText=final||interim;
+    document.getElementById('voice-transcript').textContent=voiceText||'Listening…';
+  };
+  recognition.onend=()=>{
+    if(!voiceActive) return;
+    processVoiceResult(voiceText);
+  };
+  recognition.onerror=()=>{
+    stopVoice();showToast('Voice error — tap mic to retry');
+  };
+  recognition.start();
+}
+
+function stopVoice(){
+  voiceActive=false;
+  document.getElementById('voice-overlay').style.display='none';
+  if(recognition){try{recognition.stop();}catch(e){}}
+  if(voiceText) processVoiceResult(voiceText);
+  voiceText='';
+}
+
+function cancelVoice(e){
+  e.stopPropagation();
+  voiceActive=false;
+  document.getElementById('voice-overlay').style.display='none';
+  if(recognition){try{recognition.stop();}catch(er){}}
+  voiceText='';
+}
+
+function processVoiceResult(text){
+  if(!text) return;
+  // route note save through landscape or portrait
+  if(isLandscape()){
+    lsAddNote(text,'note');
+  } else {
+    addNote(text,'note');
+  }
+  // check for timer intent
+  const timerMatch=text.match(/timer\s+(?:for\s+)?(\d+)\s*(hour|hr|minute|min)/i);
+  if(timerMatch){
+    const val=parseInt(timerMatch[1]);
+    const unit=timerMatch[2].toLowerCase();
+    const secs=(unit.startsWith('hour')||unit.startsWith('hr'))?val*3600:val*60;
+    showTimerConfirm(text,secs);
+  } else {
+    showToast('Note saved');
+  }
+}
+
+// ═══════════════════════════════════════════
+// TIMER ENGINE
+// ═══════════════════════════════════════════
+
+let activeTimerData=null;
+
+function showTimerConfirm(transcript,suggestedSecs){
+  const chips=generateTimerChips(suggestedSecs);
+  selectedTimerDuration=suggestedSecs;
+  const chipHtml=chips.map(c=>`<div class="timer-chip${c.secs===suggestedSecs?' selected':''}" onclick="selectTimerChip(this,${c.secs})">${c.label}</div>`).join('');
+  const summarySnip=`"${esc(transcript.slice(0,60))}${transcript.length>60?'\u2026':''}"`;
+  const startLabel=`Start ${chips.find(c=>c.secs===suggestedSecs)?.label||'timer'}`;
+  if(isLandscape()){
+    document.getElementById('ls-timer-confirm-summary').innerHTML=summarySnip;
+    document.getElementById('ls-timer-chip-row').innerHTML=chipHtml;
+    document.getElementById('ls-timer-btn-go').textContent=startLabel;
+    document.getElementById('ls-timer-btn-go').onclick=()=>startTimer(selectedTimerDuration);
+    document.getElementById('ls-timer-confirm-card').style.display='';
+  } else {
+    document.getElementById('timer-confirm-summary').innerHTML=summarySnip;
+    document.getElementById('timer-chip-row').innerHTML=chipHtml;
+    document.getElementById('timer-btn-go').textContent=startLabel;
+    document.getElementById('timer-btn-go').onclick=()=>startTimer(selectedTimerDuration);
+    document.getElementById('timer-confirm-card').style.display='';
+  }
+}
+
+function generateTimerChips(secs){
+  if(secs>=3600){
+    const h=Math.round(secs/3600);
+    return [
+      {secs:(h-1)*3600,label:`${h-1} hr`},
+      {secs:h*3600-1800,label:`${h-1} hr 30 min`},
+      {secs:h*3600,label:`${h} hr${h>1?'s':''}`},
+      {secs:h*3600+1800,label:`${h} hr${h>1?'s':''} 30 min`}
+    ].filter(c=>c.secs>0);
+  } else {
+    const m=Math.round(secs/60);
+    return [
+      {secs:Math.max(60,(m-10)*60),label:`${m-10} min`},
+      {secs:(m-5)*60,label:`${m-5} min`},
+      {secs:m*60,label:`${m} min`},
+      {secs:(m+5)*60,label:`${m+5} min`}
+    ].filter(c=>c.secs>0);
+  }
+}
+
+function selectTimerChip(el,secs){
+  selectedTimerDuration=secs;
+  const chipLabel=el.textContent;
+  if(isLandscape()){
+    document.querySelectorAll('#ls-timer-chip-row .timer-chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('ls-timer-btn-go').textContent=`Start ${chipLabel} timer`;
+    document.getElementById('ls-timer-btn-go').onclick=()=>startTimer(secs);
+  } else {
+    document.querySelectorAll('#timer-chip-row .timer-chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('timer-btn-go').textContent=`Start ${chipLabel} timer`;
+    document.getElementById('timer-btn-go').onclick=()=>startTimer(secs);
+  }
+}
+
+function dismissTimerConfirm(){
+  document.getElementById('timer-confirm-card').style.display='none';
+  document.getElementById('ls-timer-confirm-card').style.display='none';
+}
+
+function startTimer(durationSecs){
+  dismissTimerConfirm();
+  const comp=getComponents().find(c=>c.id===currentCompId)||{name:'Timer'};
+  activeTimerData={componentId:currentCompId,label:comp.name+' timer',durationSeconds:durationSecs,startedAt:Date.now()};
+  renderTimerBadge();
+  // tag the last log entry
+  const log=getLog();
+  if(log.length>0){
+    const last=log[log.length-1];
+    if(last.componentId===currentCompId&&!last.timerTag){
+      const h=Math.floor(durationSecs/3600),m=Math.floor((durationSecs%3600)/60);
+      last.timerTag=h>0?`${h}hr${m>0?' '+m+'min':''}`:m+'min';
+      saveLog(log);
+      if(isLandscape()){lsRenderEntries(lsCurrentTab);}else{switchLogTab(currentLogTab,true);}
+    }
+  }
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{renderTimerBadge();lsRenderTimerBadge();},1000);
+}
+
+function renderTimerBadge(){
+  const badge=document.getElementById('log-timer-running');
+  if(!activeTimerData){badge.style.display='none';return;}
+  const elapsed=(Date.now()-activeTimerData.startedAt)/1000;
+  const remaining=Math.max(0,activeTimerData.durationSeconds-elapsed);
+  if(remaining===0){
+    badge.style.display='none';
+    clearInterval(timerInterval);
+    activeTimerData=null;
+    showToast('Timer done!');
+    return;
+  }
+  badge.style.display='flex';
+  const h=Math.floor(remaining/3600),m=Math.floor((remaining%3600)/60),s=Math.floor(remaining%60);
+  document.getElementById('timer-display').textContent=`${h>0?h+':':''}${String(m).padStart(h>0?2:1,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('timer-label').textContent=activeTimerData.label;
+}
+
+// ═══════════════════════════════════════════
+// CONDUCTOR BANNER
+// ═══════════════════════════════════════════
+
+function updateConductorBanner(prefix,activeFeasts){
+  const cond=document.getElementById(prefix+'-conductor');
+  if(!cond) return;
+  if(!activeFeasts||activeFeasts.length===0){cond.style.display='none';return;}
+
+  const comps=getComponents();
+  let urgentItems=[];
+  activeFeasts.forEach(f=>{
+    const fcomps=comps.filter(c=>c.feastId===f.id);
+    fcomps.forEach(c=>{
+      if(c.status==='in_progress'&&c.conductorPlan){
+        urgentItems.push({feast:f,comp:c});
+      }
+    });
+  });
+
+  if(urgentItems.length===0){
+    // show generic
+    const f=activeFeasts[0];
+    const fcomps=comps.filter(c=>c.feastId===f.id);
+    const cooking=fcomps.filter(c=>c.status==='in_progress');
+    if(cooking.length===0){cond.style.display='none';return;}
+    cond.style.display='flex';
+    document.getElementById(prefix+'-cond-text').innerHTML=`<strong>${esc(cooking[0].name)}</strong> — cooking`;
+    document.getElementById(prefix+'-cond-pill').textContent='';
+  } else {
+    cond.style.display='flex';
+    const first=urgentItems[0];
+    document.getElementById(prefix+'-cond-text').innerHTML=`<strong>${esc(first.comp.name)}</strong> — ${esc(first.comp.conductorPlan.slice(0,50))}`;
+    document.getElementById(prefix+'-cond-pill').textContent=urgentItems.length>1?`${urgentItems.length} alerts`:'';
+  }
+}
+
+function openConductorSheet(){
+  const feasts=getFeasts();
+  const active=feasts.filter(f=>f.status==='active');
+  const comps=getComponents();
+
+  let title='All alerts';
+  if(active.length===1) title='All alerts — '+active[0].name;
+
+  document.getElementById('bs-title').textContent=title;
+
+  let html='';
+  active.forEach(feast=>{
+    if(active.length>1) html+=`<div class="bs-feast-divider">${esc(feast.name)}</div>`;
+    const fcomps=comps.filter(c=>c.feastId===feast.id&&c.status==='in_progress');
+    if(fcomps.length===0){
+      html+=`<div style="font-family:'DM Mono',monospace;font-size:9px;color:#9888B8;padding:4px 0;">Nothing urgent right now.</div>`;
+    }
+    fcomps.forEach(c=>{
+      if(c.conductorPlan){
+        html+=`<div class="bs-feast-divider">Needs attention now</div>
+          <div class="bs-alert urgent">
+            <div class="bs-dot bs-dot-red"></div>
+            <div class="bs-alert-text">
+              <div class="bs-alert-main"><strong>${esc(c.name)}</strong> — ${esc(c.conductorPlan.slice(0,80))}</div>
+              <div class="bs-alert-meta">${esc(c.name)} · now</div>
+            </div>
+            <div class="bs-alert-dismiss" onclick="dismissAlert(this)">Done</div>
+          </div>`;
+      }
+    });
+    // coming up: not started components
+    const upcoming=comps.filter(c=>c.feastId===feast.id&&c.status==='not_started');
+    if(upcoming.length>0){
+      html+=`<div class="bs-feast-divider" style="padding-top:10px;">Coming up</div>`;
+      upcoming.slice(0,3).forEach(c=>{
+        html+=`<div class="bs-alert">
+          <div class="bs-dot bs-dot-amber"></div>
+          <div class="bs-alert-text">
+            <div class="bs-alert-main"><strong>${esc(c.name)}</strong>${c.conductorPlan?` — ${esc(c.conductorPlan.slice(0,60))}`:' — not started yet'}</div>
+            <div class="bs-alert-meta">${esc(c.name)}</div>
+          </div>
+        </div>`;
+      });
+    }
+  });
+
+  if(active.length===0){
+    html='<div style="font-family:\'DM Sans\',sans-serif;font-size:13px;color:#9888B8;padding:8px 0;">No active feasts.</div>';
+  }
+
+  document.getElementById('bs-alerts').innerHTML=html;
+  document.getElementById('conductor-sheet').style.display='flex';
+}
+
+function closeConductorSheet(){document.getElementById('conductor-sheet').style.display='none';}
+function closeConductorOnScrim(e){if(e.target===document.getElementById('conductor-sheet'))closeConductorSheet();}
+function dismissAlert(el){el.closest('.bs-alert').style.opacity='.4';el.textContent='✓';}
+
+// ═══════════════════════════════════════════
+// JOURNAL
+// ═══════════════════════════════════════════
+
+function openJournal(){
+  const feasts=getFeasts();
+  const completed=feasts.filter(f=>f.status==='complete').sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
+  document.getElementById('journal-meta').textContent=`${completed.length} feast${completed.length!==1?'s':''} recorded`;
+
+  let html='';
+  if(completed.length===0){
+    html='<div style="font-family:\'DM Sans\',sans-serif;font-size:13px;color:var(--ink-faint);padding:24px;text-align:center;font-style:italic;">Your completed feasts will appear here.</div>';
+  }
+  completed.forEach(f=>{
+    const stars='★'.repeat(f.outcome.rating)+'☆'.repeat(5-f.outcome.rating);
+    const date=new Date(f.outcome.completedAt||f.startDate).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+    const comps=getComponents().filter(c=>c.feastId===f.id);
+    html+=`<div class="jcard" onclick="openJournalEntry('${f.id}')">
+      <div class="jcard-top">
+        <div class="feast-chip chip-sm ${f.colorClass}"><span class="chip-initials">${esc(f.initials)}</span></div>
+        <div class="jcard-body">
+          <div class="jcard-title">${esc(f.name)}</div>
+          <div class="jcard-meta">${date} · ${comps.length} component${comps.length!==1?'s':''}</div>
+          ${f.source?`<div class="jcard-meta" style="color:var(--ink-soft);margin-top:1px;">${esc(f.source)}</div>`:''}
+          <div class="jcard-stars">${stars}</div>
+        </div>
+      </div>
+      ${f.outcome.verdict?`<div class="jcard-snippet">"${esc(f.outcome.verdict.slice(0,100))}${f.outcome.verdict.length>100?'…':''}"</div>`:''}
+    </div>`;
+  });
+  document.getElementById('journal-list').innerHTML=html;
+  showScreen('journal');
+}
+
+function openJournalEntry(feastId){
+  const feasts=getFeasts();
+  const feast=feasts.find(f=>f.id===feastId);
+  if(!feast) return;
+  const comps=getComponents().filter(c=>c.feastId===feastId);
+
+  document.getElementById('jdrill-chip-bg').className='jdrill-chip-bg '+feast.colorClass;
+  document.getElementById('jdrill-watermark').textContent=feast.initials;
+  document.getElementById('jdrill-title').textContent=feast.name;
+
+  const startD=new Date(feast.startDate).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+  const endD=feast.outcome.completedAt?new Date(feast.outcome.completedAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):'';
+  const days=feast.outcome.completedAt?Math.max(1,Math.round((new Date(feast.outcome.completedAt)-new Date(feast.startDate))/86400000)):null;
+  document.getElementById('jdrill-meta').textContent=`${startD}${endD&&endD!==startD?'–'+endD:''} · ${comps.length} components${days?` · ${days} day${days!==1?'s':''}`:''}`;
+
+  const stars='★'.repeat(feast.outcome.rating)+'☆'.repeat(5-feast.outcome.rating);
+  let retroHtml=feast.retroNotes.map(r=>`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+      <div class="jdrill-retro-note">${esc(r.text)}</div>
+      <div class="jdrill-retro-note-meta">${new Date(r.createdAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})} · added later</div>
+    </div>`).join('');
+
+  document.getElementById('jdrill-body').innerHTML=`
+    <div>
+      <div class="jdrill-section-lbl">Rating</div>
+      <div class="jdrill-stars">${stars}</div>
+    </div>
+    ${feast.outcome.verdict?`<div><div class="jdrill-section-lbl">Verdict</div><div class="jdrill-verdict">${esc(feast.outcome.verdict)}</div></div>`:''}
+    ${feast.outcome.nextTime?`<div><div class="jdrill-section-lbl">Next time I'd…</div><div class="jdrill-next">${esc(feast.outcome.nextTime)}</div></div>`:''}
+    <div>
+      <div class="jdrill-section-lbl">Components</div>
+      <div class="jdrill-comps">${comps.map(c=>`<div class="jdrill-comp"><div class="jdrill-comp-name">${esc(c.name)}</div><div class="jdrill-comp-tag">Done</div></div>`).join('')}</div>
+    </div>
+    <div>
+      <div class="jdrill-section-lbl">Retrospective Notes</div>
+      ${retroHtml}
+      <div class="jdrill-retro-add">
+        <div class="jdrill-retro-label">Add a note</div>
+        <textarea class="jdrill-retro-input" id="retro-input-${feastId}" placeholder="What do you remember now that you didn't write down then…"></textarea>
+        <div class="jdrill-retro-save"><div class="btn-xs" onclick="saveRetroNote('${feastId}')">Save</div></div>
+      </div>
+    </div>`;
+
+  showScreen('journal-entry');
+}
+
+function saveRetroNote(feastId){
+  const input=document.getElementById('retro-input-'+feastId);
+  const text=input?.value?.trim();
+  if(!text) return;
+  const feasts=getFeasts();
+  const feast=feasts.find(f=>f.id===feastId);
+  if(!feast) return;
+  feast.retroNotes.push({id:uid(),text,createdAt:new Date().toISOString()});
+  saveFeasts(feasts);
+  showToast('Note added');
+  openJournalEntry(feastId);
+}
+
+// ═══════════════════════════════════════════
+// QUICK NOTE MODAL
+// ═══════════════════════════════════════════
+
+function openQuickNote(){
+  const feasts=getFeasts();
+  const active=feasts.filter(f=>f.status==='active');
+  if(active.length===0){showToast('No active feasts');return;}
+
+  let bodyHtml='';
+  if(active.length===1){
+    selectedQuickNoteFeastId=active[0].id;
+    const comps=getComponents().filter(c=>c.feastId===active[0].id&&c.status==='in_progress');
+    const compLabel=comps.length>0?comps[0].name:'';
+    bodyHtml=`
+      <div class="modal-active-feast-row">
+        <div class="feast-chip chip-xs ${active[0].colorClass}"><span class="chip-initials">${esc(active[0].initials)}</span></div>
+        <div class="modal-feast-name">${esc(active[0].name)}${compLabel?` — ${esc(compLabel)}`:''}</div>
+      </div>
+      <textarea class="note-textarea" id="quick-note-input" placeholder="What's happening in the kitchen…"></textarea>`;
+  } else {
+    selectedQuickNoteFeastId=active[0].id;
+    const opts=active.map(f=>{
+      const cooking=getComponents().find(c=>c.feastId===f.id&&c.status==='in_progress');
+      return `<div class="feast-pick-card${f.id===active[0].id?' selected':''}" onclick="selectQuickNoteFeast(this,'${f.id}')">
+        <div class="feast-chip chip-xs ${f.colorClass}"><span class="chip-initials">${esc(f.initials)}</span></div>
+        <div style="flex:1;"><div class="feast-pick-name">${esc(f.name)}</div><div class="feast-pick-comp">${cooking?esc(cooking.name):''}</div></div>
+        <div class="feast-pick-check">${f.id===active[0].id?'✓':''}</div>
+      </div>`;
+    }).join('');
+    bodyHtml=`
+      <div class="feast-picker-label">Which feast?</div>
+      <div class="feast-picker-opts">${opts}</div>
+      <textarea class="note-textarea" id="quick-note-input" placeholder="What's happening in the kitchen…"></textarea>`;
+  }
+  document.getElementById('quick-note-body').innerHTML=bodyHtml;
+  document.getElementById('quick-note-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('quick-note-input')?.focus(),100);
+}
+
+function selectQuickNoteFeast(el,feastId){
+  selectedQuickNoteFeastId=feastId;
+  document.querySelectorAll('.feast-pick-card').forEach(c=>{
+    c.classList.remove('selected');
+    c.querySelector('.feast-pick-check').textContent='';
+  });
+  el.classList.add('selected');
+  el.querySelector('.feast-pick-check').textContent='✓';
+}
+
+function saveQuickNote(){
+  const input=document.getElementById('quick-note-input');
+  const text=input?.value?.trim();
+  if(!text){showToast('Write something first');return;}
+  if(!selectedQuickNoteFeastId){showToast('Select a feast');return;}
+
+  // find active component for that feast
+  const comps=getComponents();
+  const target=comps.find(c=>c.feastId===selectedQuickNoteFeastId&&c.status==='in_progress')||
+               comps.find(c=>c.feastId===selectedQuickNoteFeastId);
+  if(!target){showToast('No components yet');closeModal('quick-note-modal');return;}
+
+  const log=getLog();
+  log.push({id:uid(),componentId:target.id,type:'note',text,createdAt:new Date().toISOString(),timerTag:null});
+  saveLog(log);
+  closeModal('quick-note-modal');
+  showToast('Note saved');
+}
+
+// ═══════════════════════════════════════════
+// ADD COMPONENT MODAL
+// ═══════════════════════════════════════════
+
+function openAddComp(){
+  document.getElementById('comp-name-input').value='';
+  document.getElementById('comp-url-input').value='';
+  document.getElementById('add-comp-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('comp-name-input').focus(),100);
+}
+
+function addComponent(){
+  const name=document.getElementById('comp-name-input').value.trim();
+  if(!name){showToast('Enter a name');return;}
+  const url=document.getElementById('comp-url-input').value.trim();
+  const comps=getComponents();
+  comps.push({id:uid(),feastId:currentFeastId,name,status:'not_started',startedAt:null,conductorPlan:'',recipeUrl:url,log:[]});
+  saveComponents(comps);
+  closeModal('add-comp-modal');
+  renderFeast(currentFeastId);
+  showToast('Component added');
+}
+
+// ═══════════════════════════════════════════
+// NEW FEAST
+// ═══════════════════════════════════════════
+
+function initNewFeast(){
+  nfSelectedColor=COLOR_CLASSES[Math.floor(Math.random()*COLOR_CLASSES.length)];
+  document.getElementById('nf-name').value='';
+  document.getElementById('nf-source').value='';
+  document.getElementById('nf-initials').value='';
+  renderColorGrid();
+  nfUpdate();
+}
+
+function renderColorGrid(){
+  const grid=document.getElementById('nf-color-grid');
+  grid.innerHTML=COLOR_CLASSES.map((cls,i)=>
+    `<div class="color-swatch ${cls}${cls===nfSelectedColor?' selected':''}" onclick="nfSelectColor('${cls}')"></div>`
+  ).join('');
+}
+
+function nfSelectColor(cls){
+  nfSelectedColor=cls;
+  renderColorGrid();
+  nfUpdatePreview();
+}
+
+function nfUpdate(){
+  const name=document.getElementById('nf-name').value;
+  const init=autoInitials(name);
+  const initialsInput=document.getElementById('nf-initials');
+  if(!initialsInput.dataset.manuallySet) initialsInput.value=init;
+  nfUpdatePreview();
+  const btn=document.getElementById('nf-create-btn');
+  if(name.trim()){
+    btn.style.opacity='1';btn.style.pointerEvents='';
+  } else {
+    btn.style.opacity='.4';btn.style.pointerEvents='none';
+  }
+}
+
+function nfUpdateInitials(){
+  document.getElementById('nf-initials').dataset.manuallySet='1';
+  nfUpdatePreview();
+}
+
+function nfUpdatePreview(){
+  const name=document.getElementById('nf-name').value;
+  const init=document.getElementById('nf-initials').value||autoInitials(name)||'—';
+  const chip=document.getElementById('nf-preview-chip');
+  chip.className='preview-chip '+nfSelectedColor;
+  document.getElementById('nf-preview-init').textContent=init;
+  const pname=document.getElementById('nf-preview-name');
+  if(name){
+    pname.textContent=name;pname.style.color='';pname.style.fontStyle='';
+  } else {
+    pname.textContent='Enter a name above';pname.style.color='var(--ink-faint)';pname.style.fontStyle='italic';
+  }
+}
+
+function createFeast(){
+  const name=document.getElementById('nf-name').value.trim();
+  if(!name) return;
+  const source=document.getElementById('nf-source').value.trim();
+  const initials=document.getElementById('nf-initials').value.trim()||autoInitials(name);
+  const feast={id:uid(),name,source,colorClass:nfSelectedColor,initials,status:'active',startDate:new Date().toISOString(),targetDate:null,outcome:{rating:0,verdict:'',nextTime:'',completedAt:null},retroNotes:[]};
+  const feasts=getFeasts();
+  feasts.push(feast);
+  saveFeasts(feasts);
+  currentFeastId=feast.id;
+  renderFeast(feast.id);
+  showScreen('feast');
+  showToast('Feast started!');
+}
+
+// ═══════════════════════════════════════════
+// FEAST COMPLETE
+// ═══════════════════════════════════════════
+
+function openFeastComplete(){
+  const feast=getFeasts().find(f=>f.id===currentFeastId);
+  if(!feast) return;
+  const comps=getComponents().filter(c=>c.feastId===currentFeastId);
+
+  document.getElementById('fc-hero-title').textContent=feast.name;
+  document.getElementById('fc-hero-sub').textContent=`${comps.length} component${comps.length!==1?'s':''} · ${new Date().toLocaleDateString([],{month:'short',day:'numeric'})}`;
+
+  // stars
+  let currentRating=feast.outcome.rating||0;
+  function renderStars(){
+    document.getElementById('star-row').innerHTML=[1,2,3,4,5].map(n=>
+      `<div class="star${n<=currentRating?' lit':''}" onclick="setRating(${n})">★</div>`
+    ).join('');
+  }
+  window.setRating=function(n){currentRating=n;renderStars();};
+  renderStars();
+
+  document.getElementById('fc-verdict').value=feast.outcome.verdict||'';
+  document.getElementById('fc-next-time').value=feast.outcome.nextTime||'';
+  document.getElementById('fc-comps-list').innerHTML=comps.map(c=>`
+    <div class="fc-comp-item">
+      <div class="fc-comp-name">${esc(c.name)}</div>
+      <div class="fc-comp-done">Done</div>
+    </div>`).join('');
+
+  showScreen('complete');
+}
+
+function saveFeastToJournal(){
+  const feasts=getFeasts();
+  const feast=feasts.find(f=>f.id===currentFeastId);
+  if(!feast) return;
+  feast.status='complete';
+  feast.outcome.rating=parseInt(document.getElementById('star-row').querySelectorAll('.star.lit').length)||0;
+  feast.outcome.verdict=document.getElementById('fc-verdict').value.trim();
+  feast.outcome.nextTime=document.getElementById('fc-next-time').value.trim();
+  feast.outcome.completedAt=new Date().toISOString();
+  saveFeasts(feasts);
+  showToast('Saved to journal');
+  goHome();
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+
+function initSettings(){
+  const state=getState();
+  const tzSel=document.getElementById('tz-select');
+  if(tzSel) tzSel.value=state.timezone||'America/New_York';
+
+  const kioskToggle=document.getElementById('kiosk-toggle');
+  if(kioskToggle){
+    if(state.kioskMode) kioskToggle.classList.remove('off');
+    else kioskToggle.classList.add('off');
+  }
+
+  const brightness=state.brightness||75;
+  document.getElementById('brightness-val').textContent=brightness+'%';
+  document.getElementById('brightness-fill').style.width=brightness+'%';
+  document.getElementById('brightness-thumb').style.left=brightness+'%';
+
+  // brightness drag
+  const bar=document.getElementById('brightness-bar');
+  let dragging=false;
+  function updateBrightness(e){
+    const rect=bar.getBoundingClientRect();
+    const x=Math.max(0,Math.min(e.clientX-rect.left,rect.width));
+    const pct=Math.round((x/rect.width)*100);
+    document.getElementById('brightness-val').textContent=pct+'%';
+    document.getElementById('brightness-fill').style.width=pct+'%';
+    document.getElementById('brightness-thumb').style.left=pct+'%';
+    saveSetting('brightness',pct);
+  }
+  bar.addEventListener('mousedown',e=>{dragging=true;updateBrightness(e);});
+  bar.addEventListener('touchstart',e=>{dragging=true;updateBrightness(e.touches[0]);});
+  document.addEventListener('mousemove',e=>{if(dragging)updateBrightness(e);});
+  document.addEventListener('touchmove',e=>{if(dragging)updateBrightness(e.touches[0]);});
+  document.addEventListener('mouseup',()=>{dragging=false;});
+  document.addEventListener('touchend',()=>{dragging=false;});
+}
+
+function toggleKiosk(){
+  const state=getState();
+  state.kioskMode=!state.kioskMode;
+  saveState(state);
+  const toggle=document.getElementById('kiosk-toggle');
+  if(state.kioskMode){
+    toggle.classList.remove('off');
+    requestWakeLock();
+  } else {
+    toggle.classList.add('off');
+    if(wakeLock){wakeLock.release().catch(()=>{});wakeLock=null;}
+  }
+}
+
+async function requestWakeLock(){
+  if('wakeLock' in navigator){
+    try{wakeLock=await navigator.wakeLock.request('screen');}catch(e){}
+  }
+}
+
+function saveSetting(key,val){
+  const state=getState();
+  state[key]=val;
+  saveState(state);
+}
+
+// ═══════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════
+
+function closeModal(id){document.getElementById(id).style.display='none';}
+function closeModalOnScrim(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+
+// ═══════════════════════════════════════════
+// LANDSCAPE SPLIT-VIEW
+// ═══════════════════════════════════════════
+
+function isLandscape(){
+  return window.innerWidth>=600 && window.innerWidth>window.innerHeight;
+}
+
+// showScreen — routes log→right panel in landscape, otherwise standard navigation
+function showScreen(id){
+  if(id==='log' && isLandscape()){
+    _showScreenBase('feast');
+    lsRenderLog();
+    return;
+  }
+  _showScreenBase(id);
+}
+
+// openLog — routes to right panel in landscape, otherwise portrait log screen
+function openLog(compId){
+  if(isLandscape()){
+    selectCompLandscape(compId);
+    return;
+  }
+  _openLogBase(compId);
+}
+
+let lsCurrentTab='log';
+
+function selectCompLandscape(compId){
+  currentCompId=compId;
+  lsCurrentTab='log';
+  // highlight selected card in left panel
+  document.querySelectorAll('#feast-left-inner .comp-card').forEach(el=>{
+    el.classList.toggle('ls-selected', el.dataset.compId===compId);
+  });
+  lsRenderLog();
+}
+
+function lsRenderLog(){
+  const comp=getComponents().find(c=>c.id===currentCompId);
+  if(!comp) return;
+
+  // show right panel log, hide empty state
+  document.getElementById('ls-empty-state').style.display='none';
+  const panel=document.getElementById('ls-log-panel');
+  panel.style.display='flex';
+
+  // comp name + status badge
+  document.getElementById('ls-log-comp-name').textContent=comp.name;
+  const statusLabel={not_started:'Not started',in_progress:'Cooking',resting:'Resting',done:'Done'}[comp.status];
+  const sBadge='s-'+comp.status.replace('_','-');
+  document.getElementById('ls-log-status-badge').innerHTML=`<div class="s-badge ${sBadge}" style="margin:0 16px 8px 0;">${statusLabel}</div>`;
+
+  lsSwitchTab(lsCurrentTab, true);
+  lsRenderTimerBadge();
+}
+
+function lsSwitchTab(tab, force=false){
+  if(tab===lsCurrentTab && !force && tab!=='log') return;
+  lsCurrentTab=tab;
+  ['log','checkpoints','plan'].forEach(t=>{
+    document.getElementById('ls-tab-'+t)?.classList.toggle('active', t===tab);
+  });
+  const planContent=document.getElementById('ls-plan-tab-content');
+  const logEntries=document.getElementById('ls-log-entries');
+  const addBar=document.getElementById('ls-add-bar');
+
+  if(tab==='plan'){
+    planContent.style.display='flex';
+    logEntries.style.display='none';
+    addBar.style.display='none';
+    const comp=getComponents().find(c=>c.id===currentCompId);
+    document.getElementById('ls-plan-input').value=comp?.conductorPlan||'';
+  } else {
+    planContent.style.display='none';
+    logEntries.style.display='block';
+    addBar.style.display=tab==='log'?'flex':'none';
+    lsRenderEntries(tab);
+  }
+}
+
+function lsRenderEntries(tab){
+  const entries=getLog().filter(l=>l.componentId===currentCompId);
+  const filtered=tab==='checkpoints'?entries.filter(e=>e.type==='checkpoint'):entries;
+  const comp=getComponents().find(c=>c.id===currentCompId)||{};
+  const startedAt=comp.startedAt?new Date(comp.startedAt):null;
+  const el=document.getElementById('ls-log-entries');
+  if(!filtered.length){
+    el.innerHTML=`<div style="padding:20px 16px;font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.1em;text-transform:uppercase;">${tab==='checkpoints'?'No checkpoints yet':'No notes yet — tap to add one'}</div>`;
+    return;
+  }
+  el.innerHTML=[...filtered].reverse().map(e=>{
+    const d=new Date(e.createdAt);
+    const wall=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    let elapsed='';
+    if(startedAt){const diff=Math.round((d-startedAt)/60000);elapsed=diff>=0?`+${diff}m`:`${diff}m`;}
+    if(e.type==='checkpoint'){
+      return `<div class="log-entry checkpoint-entry"><div class="entry-cp-badge">✓ checkpoint</div><div class="entry-text">${esc(e.text)}</div><div class="entry-meta"><span>${wall}</span>${elapsed?`<span>${elapsed}</span>`:''}</div></div>`;
+    }
+    return `<div class="log-entry"><div class="entry-text">${esc(e.text)}</div><div class="entry-meta"><span>${wall}</span>${elapsed?`<span>${elapsed}</span>`:''}</div></div>`;
+  }).join('');
+}
+
+function lsAddNote(text, type='note', timerTag=null){
+  if(!currentCompId) return;
+  const entries=getLog();
+  entries.push({id:uid(),componentId:currentCompId,type,text,createdAt:new Date().toISOString(),timerTag});
+  saveLog(entries);
+  lsRenderEntries(lsCurrentTab);
+  showToast(type==='checkpoint'?'Checkpoint saved':'Note added');
+}
+
+function lsAddCheckpoint(){
+  const input=document.getElementById('ls-log-input');
+  const text=input.value.trim();
+  if(!text) return;
+  lsAddNote(text,'checkpoint');
+  input.value='';
+  autoResize(input);
+}
+
+function lsSavePlan(){
+  if(!currentCompId) return;
+  const comps=getComponents();
+  const c=comps.find(x=>x.id===currentCompId);
+  if(!c) return;
+  c.conductorPlan=document.getElementById('ls-plan-input').value;
+  saveComponents(comps);
+  showToast('Plan saved');
+}
+
+function lsRenderTimerBadge(){
+  const badge=document.getElementById('ls-timer-running');
+  if(!badge) return;
+  if(!activeTimerData){badge.style.display='none';return;}
+  const elapsed=(Date.now()-activeTimerData.startedAt)/1000;
+  const remaining=Math.max(0,activeTimerData.durationSeconds-elapsed);
+  if(remaining===0){badge.style.display='none';return;}
+  badge.style.display='flex';
+  const h=Math.floor(remaining/3600),m=Math.floor((remaining%3600)/60),s=Math.floor(remaining%60);
+  const lsTimerDisplay=document.getElementById('ls-timer-display');
+  const lsTimerLabel=document.getElementById('ls-timer-label');
+  if(lsTimerDisplay) lsTimerDisplay.textContent=`${h>0?h+':':''}${String(m).padStart(h>0?2:1,'0')}:${String(s).padStart(2,'0')}`;
+  if(lsTimerLabel) lsTimerLabel.textContent=activeTimerData.label;
+}
+
+// renderFeast — also populates left panel in landscape
+function renderFeast(feastId){
+  _renderFeastBase(feastId);
+  if(isLandscape()) lsRenderLeftPanel(feastId);
+}
+
+function lsRenderLeftPanel(feastId){
+  const feast=getFeasts().find(f=>f.id===feastId);
+  if(!feast) return;
+  document.getElementById('feast-left-title').textContent=feast.name;
+
+  const comps=getComponents().filter(c=>c.feastId===feastId);
+  const active=getFeasts().filter(f=>f.status==='active');
+  updateConductorBanner('feast-ls', active);
+
+  // overtime
+  const now=Date.now();
+  const overtime=comps.some(c=>c.status==='in_progress'&&c.startedAt&&(now-new Date(c.startedAt).getTime())>8*3600000);
+  // render comp cards into left inner
+  let html='';
+  comps.forEach(c=>{
+    const statusLabel={not_started:'Not started',in_progress:'Cooking',resting:'Resting',done:'Done'}[c.status]||c.status;
+    const sBadge='s-'+c.status.replace('_','-');
+    const logCount=getLog().filter(l=>l.componentId===c.id).length;
+    const sel=c.id===currentCompId?' ls-selected':'';
+    html+=`<div class="comp-card${sel}" data-comp-id="${c.id}" onclick="selectCompLandscape('${c.id}')">
+      <div class="comp-card-row">
+        <div><div class="comp-name">${esc(c.name)}</div><div class="comp-meta">${logCount} entr${logCount!==1?'ies':'y'}</div></div>
+        <div><div class="s-badge ${sBadge}" style="font-size:7px;">${statusLabel}</div></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+        ${c.status!=='done'?`<div onclick="event.stopPropagation();lsCycleStatus('${c.id}')" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:rgba(237,232,244,.35);border:1px solid rgba(237,232,244,.1);border-radius:4px;padding:3px 8px;cursor:pointer;">Advance →</div>`:''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('feast-left-inner').innerHTML=html+`<div class="add-comp-btn" onclick="openAddComp()"><div style="font-size:16px;color:rgba(237,232,244,.2);line-height:1;">+</div><span>Add a component</span></div>`;
+}
+
+function lsCycleStatus(compId){
+  const comps=getComponents();
+  const c=comps.find(x=>x.id===compId);
+  if(!c) return;
+  const order=['not_started','in_progress','resting','done'];
+  const idx=order.indexOf(c.status);
+  c.status=order[Math.min(idx+1,order.length-1)];
+  if(c.status==='in_progress'&&!c.startedAt) c.startedAt=new Date().toISOString();
+  saveComponents(comps);
+  lsRenderLeftPanel(currentFeastId);
+  if(currentCompId===compId) lsRenderLog();
+  showToast('Status updated');
+}
+
+  // wire up ls-log-input enter key
+  document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('ls-log-input')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      const v=e.target.value.trim();
+      if(v){lsAddNote(v);e.target.value='';autoResize(e.target);}
+    }
+  });
+});
+
+let toastTimeout;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // ── Service worker registration ──
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js')
+      .catch(err => console.warn('SW registration failed:', err));
+  }
+
+  seedDemoData();
+  startClock();
+  renderHome();
+  showScreen('home');
+  initSettings();
+
+  const state=getState();
+  if(state.kioskMode) requestWakeLock();
+
+  // Enter key on add-input
+  document.getElementById('log-input').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      const v=e.target.value.trim();
+      if(v) addNote(v);
+    }
+  });
+});
+</script>
+<script src="images.js"></script>
+<script>
+// Set src on static image elements from images.js constants
+document.addEventListener('DOMContentLoaded', function() {
+  function setImg(id, src) {
+    var el = document.getElementById(id);
+    if (el && src) el.src = src;
+  }
+  setImg('ot-img',        typeof IMG_OVERTIME !== 'undefined' ? IMG_OVERTIME : '');
+  setImg('fc-hero-img',   typeof IMG_COMPLETE !== 'undefined' ? IMG_COMPLETE : '');
+  setImg('bs-timer-hero', typeof IMG_TIMER    !== 'undefined' ? IMG_TIMER    : '');
+});
+</script>
+</body>
+</html>
